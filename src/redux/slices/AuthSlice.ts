@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { Token, Token__FULL } from '../../types/Types'
-import { clearTokens, getTokens, saveTokens } from '../../utils/SecureStore'
+import { clearTokens, getTokens, saveTokens } from '../../services/SecureStore'
 
 const initialState: Token = {
   access: null,

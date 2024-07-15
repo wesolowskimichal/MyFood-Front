@@ -1,12 +1,14 @@
 import { configureStore } from '@reduxjs/toolkit'
 import { setupListeners } from '@reduxjs/toolkit/query/react'
 import authReducer from './slices/AuthSlice'
+import themeReducer from './slices/ThemeSlice'
 import { fridgeApiSlice } from './api/slices/FridgeApiSlice'
 import { journalApiSlice } from './api/slices/JournalApiSlice'
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
+    theme: themeReducer,
     [fridgeApiSlice.reducerPath]: fridgeApiSlice.reducer,
     [journalApiSlice.reducerPath]: journalApiSlice.reducer
   },

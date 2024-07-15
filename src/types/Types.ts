@@ -68,6 +68,7 @@ export type FridgePage = Page<Fridge>
 
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import { NavigationProp, ParamListBase, RouteProp } from '@react-navigation/native'
+import { ColorValue } from 'react-native'
 
 //#region Navigation Types
 export type RootStackParamList = {
@@ -86,3 +87,21 @@ export type NavProps = {
   route: RouteProp<RootStackParamList, keyof RootStackParamList>
 }
 //#endregopm
+
+export type Theme = 'light' | 'dark'
+
+export type ThemeColors = {
+  primary: ColorValue
+  accent: ColorValue
+  neutral: {
+    background: ColorValue
+    surface: ColorValue
+    text: ColorValue
+    border: ColorValue
+  }
+  complementary: {
+    success: ColorValue
+    warning: ColorValue
+    danger: ColorValue
+  }
+}

@@ -6,10 +6,13 @@ export const journalApiSlice = createApi({
   reducerPath: 'journalApi',
   baseQuery: baseQueryWithReauth,
   endpoints: builder => ({
-    getJournal: builder.query<JournalPage, void>({
-      query: () => 'api/journal/'
+    getJournals: builder.query<JournalPage, void>({
+      query: () => `api/journal/`
+    }),
+    getJournalsByDate: builder.query<JournalPage, { year: number; month: number; day: number }>({
+      query: ({ year, month, day }) => `api/journal/?year=${year}&month=${month}&day=${day}`
     })
   })
 })
 
-export const { useGetJournalQuery } = journalApiSlice
+export const { useGetJournalsQuery, useGetJournalsByDateQuery } = journalApiSlice
