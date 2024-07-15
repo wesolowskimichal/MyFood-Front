@@ -1,13 +1,20 @@
-import { ActivityIndicator, Button, FlatList, Text, View } from 'react-native'
+import { ActivityIndicator, Button, FlatList, StyleSheet, Text, View } from 'react-native'
 import { useGetJournalsByDateQuery } from '../../redux/api/slices/JournalApiSlice'
 import DateTimePicker from '@react-native-community/datetimepicker'
-
-import { JournalScreenProps } from '../../types/Types'
-import { useState } from 'react'
+import { JournalScreenProps, ThemeColors } from '../../types/Types'
+import { useMemo, useState } from 'react'
+import { useSelector } from 'react-redux'
+import { AppDispatch, RootState } from '../../redux/Store'
+import { useDispatch } from 'react-redux'
+import { toggleTheme } from '../../redux/slices/ThemeSlice'
 
 const Journal = ({ navigation, route }: JournalScreenProps) => {
   const [date, setDate] = useState<Date>(new Date())
   const [show, setShow] = useState<boolean>(false)
+
+  const colors = useSelector((state: RootState) => state.theme.colors)
+  const styles = useMemo(() => createStyles(colors), [colors])
+  const dispatch = useDispatch<AppDispatch>()
 
   const onChange = (event: any, selectedDate: Date | undefined) => {
     const currentDate = selectedDate || date
@@ -25,8 +32,9 @@ const Journal = ({ navigation, route }: JournalScreenProps) => {
   if (error) return <Text>Error fetching data</Text>
 
   return (
-    <View style={{ flex: 1, padding: 16 }}>
+    <View style={styles.Wrapper}>
       <Button onPress={() => setShow(true)} title="Select Date" />
+      <Button onPress={() => dispatch(toggleTheme())} title="Toggle Theme" />
       {show && (
         <DateTimePicker testID="dateTimePicker" value={date} mode={'date'} display="default" onChange={onChange} />
       )}
@@ -48,5 +56,14 @@ const Journal = ({ navigation, route }: JournalScreenProps) => {
     </View>
   )
 }
+
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    Wrapper: {
+      flex: 1,
+      padding: 16,
+      backgroundColor: colors.primary
+    }
+  })
 
 export default Journal
