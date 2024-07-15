@@ -1,8 +1,36 @@
+import { jwtDecode } from 'jwt-decode'
 import { clearAuth, setAuth } from '../redux/slices/AuthSlice'
 import { Token__FULL } from '../types/Types'
-import { Store } from '@reduxjs/toolkit'
+import { store } from '../redux/Store'
 
-export const refreshAccessToken = async (store: Store): Promise<string | null> => {
+export const checkTokenValidity = async (): Promise<boolean> => {
+  const state = store.getState()
+  const { access, refresh } = state.auth
+  if (!access) {
+    return false
+  }
+
+  const isTokenValid = await validateToken(access)
+  return isTokenValid
+}
+
+export const validateToken = async (token: string): Promise<boolean> => {
+  const decodedToken = jwtDecode(token)
+  const tokenExpiration = decodedToken.exp
+  const now = Date.now() / 1000
+
+  if (!tokenExpiration) {
+    return false
+  }
+
+  if (tokenExpiration > now) {
+    return true
+  }
+  const newToken = await refreshAccessToken()
+  return newToken !== null
+}
+
+export const refreshAccessToken = async (): Promise<string | null> => {
   const state = store.getState()
   const refreshToken = state.auth.refresh
 
