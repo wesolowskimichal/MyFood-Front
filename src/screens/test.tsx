@@ -1,7 +1,8 @@
 import { ActivityIndicator, FlatList, Text, View } from 'react-native'
-import { useGetFridgesQuery } from '../redux/api/FridgeApiSlice'
+import { useGetFridgesQuery } from '../redux/api/slices/FridgeApiSlice'
+import { TestScreenProps } from '../types/Types'
 
-const FridgeList = () => {
+const FridgeList = ({ navigation, route }: TestScreenProps) => {
   const { data, error, isLoading } = useGetFridgesQuery()
 
   if (isLoading) return <ActivityIndicator />

@@ -3,31 +3,29 @@ import { clearAuth, setAuth } from '../redux/slices/AuthSlice'
 import { Token__FULL } from '../types/Types'
 import { store } from '../redux/Store'
 
-export const checkTokenValidity = async (): Promise<boolean> => {
-  const state = store.getState()
-  const { access, refresh } = state.auth
-  if (!access) {
-    return false
-  }
-
-  const isTokenValid = await validateToken(access)
-  return isTokenValid
-}
-
 export const validateToken = async (token: string): Promise<boolean> => {
-  const decodedToken = jwtDecode(token)
-  const tokenExpiration = decodedToken.exp
-  const now = Date.now() / 1000
+  try {
+    const decodedToken = jwtDecode(token)
+    const tokenExpiration = decodedToken.exp
+    const now = Date.now() / 1000
 
-  if (!tokenExpiration) {
+    if (!tokenExpiration) {
+      return false
+    }
+
+    if (tokenExpiration > now) {
+      return true
+    }
+
+    const newToken = await refreshAccessToken()
+    console.log(`newToken: ${newToken}`)
+
+    return newToken !== null
+  } catch (error) {
+    console.error('Token validation error: ', error)
+    store.dispatch(clearAuth())
     return false
   }
-
-  if (tokenExpiration > now) {
-    return true
-  }
-  const newToken = await refreshAccessToken()
-  return newToken !== null
 }
 
 export const refreshAccessToken = async (): Promise<string | null> => {

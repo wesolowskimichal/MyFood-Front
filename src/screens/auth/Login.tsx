@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { api } from '../../services/Api'
-import { Token__FULL } from '../../types/Types'
+import { LoginScreenProps, Token__FULL } from '../../types/Types'
 import { setAuth } from '../../redux/slices/AuthSlice'
 import { Button, TextInput, View, Text } from 'react-native'
 
-const Login = () => {
+const Login = ({ navigation, route: _route }: LoginScreenProps) => {
   const dispatch = useDispatch()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -22,6 +22,7 @@ const Login = () => {
       }
       const auth: Token__FULL = response.data
       dispatch(setAuth(auth))
+      navigation.navigate('Journal')
     } catch (error) {
       setError('Login failed')
     }
