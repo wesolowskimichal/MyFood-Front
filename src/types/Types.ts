@@ -74,11 +74,13 @@ import { ColorValue } from 'react-native'
 export type RootStackParamList = {
   // lastly logged in username in prop to Login
   Login: undefined
+  Register: undefined
   Journal: undefined
   Test: undefined
 }
 
 export type LoginScreenProps = NativeStackScreenProps<ParamListBase, 'Login'>
+export type RegisterScreenProps = NativeStackScreenProps<ParamListBase, 'Register'>
 export type JournalScreenProps = NativeStackScreenProps<ParamListBase, 'Journal'>
 export type TestScreenProps = NativeStackScreenProps<ParamListBase, 'Test'>
 

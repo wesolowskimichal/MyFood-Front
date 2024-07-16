@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import { ReactNode, useMemo } from 'react'
 import { RootStackParamList, ThemeColors } from '../../types/Types'
 import { StyleSheet, Text, View } from 'react-native'
 import { useSelector } from 'react-redux'
@@ -11,7 +11,7 @@ type ScreenWrapperProps = {
 
 const ScreenWrapper = ({ children }: ScreenWrapperProps) => {
   const colors = useSelector((state: RootState) => state.theme.colors)
-  const styles = createStyles(colors)
+  const styles = useMemo(() => createStyles(colors), [colors])
 
   return <SafeAreaView style={styles.root}>{children}</SafeAreaView>
 }

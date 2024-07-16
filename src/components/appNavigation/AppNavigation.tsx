@@ -11,6 +11,7 @@ import { getTheme } from '../../redux/slices/ThemeSlice'
 import { AppDispatch } from '../../redux/Store'
 import { useDispatch } from 'react-redux'
 import ScreenWrapper from '../screenWrapper/ScreenWrapper'
+import Register from '../../screens/auth/Register'
 
 const Stack = createNativeStackNavigator()
 
@@ -24,6 +25,7 @@ const AppNavigation = () => {
     }
 
     const initializeAuth = async () => {
+      // uncomment when login, register finished - it is auto reauth
       // await dispatch(loadTokens())
       await dispatch(clearAuth())
     }
@@ -60,21 +62,38 @@ const AppNavigation = () => {
             )}
           </Stack.Screen>
         ) : (
-          <Stack.Screen
-            name="Login"
-            options={{
-              headerShown: false,
-              presentation: 'modal',
-              animationTypeForReplace: 'push',
-              animation: 'slide_from_right'
-            }}
-          >
-            {props => (
-              <ScreenWrapper>
-                <Login {...props} />
-              </ScreenWrapper>
-            )}
-          </Stack.Screen>
+          <>
+            <Stack.Screen
+              name="Login"
+              options={{
+                headerShown: false,
+                presentation: 'modal',
+                animationTypeForReplace: 'push',
+                animation: 'slide_from_right'
+              }}
+            >
+              {props => (
+                <ScreenWrapper>
+                  <Login {...props} />
+                </ScreenWrapper>
+              )}
+            </Stack.Screen>
+            <Stack.Screen
+              name="Register"
+              options={{
+                headerShown: false,
+                presentation: 'modal',
+                animationTypeForReplace: 'push',
+                animation: 'slide_from_right'
+              }}
+            >
+              {props => (
+                <ScreenWrapper>
+                  <Register {...props} />
+                </ScreenWrapper>
+              )}
+            </Stack.Screen>
+          </>
         )}
       </Stack.Navigator>
     </NavigationContainer>
