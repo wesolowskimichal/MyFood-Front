@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
-import { ActivityIndicator } from 'react-native'
-import { loadTokens } from '../../redux/slices/AuthSlice'
+import { ActivityIndicator, StyleSheet, View } from 'react-native'
+import { clearAuth, loadTokens } from '../../redux/slices/AuthSlice'
 import { validateToken } from '../../utils/Auth'
 import Login from '../../screens/auth/Login'
 import { useAppSelector } from '../../hooks/useAppDispatch'
@@ -15,7 +15,6 @@ import ScreenWrapper from '../screenWrapper/ScreenWrapper'
 const Stack = createNativeStackNavigator()
 
 const AppNavigation = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
   const dispatch = useDispatch<AppDispatch>()
   const authState = useAppSelector(state => state.auth)
 
@@ -24,31 +23,27 @@ const AppNavigation = () => {
       await dispatch(getTheme())
     }
 
-    initializeTheme()
-  }, [dispatch])
-
-  useEffect(() => {
     const initializeAuth = async () => {
-      await dispatch(loadTokens())
-      if (authState.access) {
-        const isValid = await validateToken(authState.access)
-        setIsAuthenticated(isValid)
-      } else {
-        setIsAuthenticated(false)
-      }
+      // await dispatch(loadTokens())
+      await dispatch(clearAuth())
     }
 
+    initializeTheme()
     initializeAuth()
-  }, [dispatch, authState.access])
+  }, [dispatch])
 
-  if (isAuthenticated === null) {
-    return <ActivityIndicator size="large" />
+  if (authState.isAuthenticated === null) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" />
+      </View>
+    )
   }
 
   return (
     <NavigationContainer>
       <Stack.Navigator>
-        {isAuthenticated ? (
+        {authState.isAuthenticated ? (
           <Stack.Screen
             name="Journal"
             options={{
@@ -65,11 +60,33 @@ const AppNavigation = () => {
             )}
           </Stack.Screen>
         ) : (
-          <Stack.Screen name="Login" component={Login} />
+          <Stack.Screen
+            name="Login"
+            options={{
+              headerShown: false,
+              presentation: 'modal',
+              animationTypeForReplace: 'push',
+              animation: 'slide_from_right'
+            }}
+          >
+            {props => (
+              <ScreenWrapper>
+                <Login {...props} />
+              </ScreenWrapper>
+            )}
+          </Stack.Screen>
         )}
       </Stack.Navigator>
     </NavigationContainer>
   )
 }
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center'
+  }
+})
 
 export default AppNavigation
