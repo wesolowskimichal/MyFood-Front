@@ -12,8 +12,9 @@ import { AppDispatch } from '../../redux/Store'
 import { useDispatch } from 'react-redux'
 import ScreenWrapper from '../screenWrapper/ScreenWrapper'
 import Register from '../../screens/auth/Register'
+import { RootStackParamList } from '../../types/Types'
 
-const Stack = createNativeStackNavigator()
+const Stack = createNativeStackNavigator<RootStackParamList>()
 
 const AppNavigation = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -26,7 +27,7 @@ const AppNavigation = () => {
 
     const initializeAuth = async () => {
       // uncomment when login, register finished - it is auto reauth
-      // await dispatch(loadTokens())
+      // await dispatch(loadTokens());
       await dispatch(clearAuth())
     }
 

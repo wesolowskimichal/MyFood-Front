@@ -7,10 +7,11 @@ export const LightThemeColors: ThemeColors = {
     background: '#FFFFFF',
     surface: '#F3F4F6',
     text: '#111827',
-    border: '#E5E7EB'
+    border: '#C5C7CA'
   },
   complementary: {
     success: '#10B981',
+    info: '#2563EB',
     warning: '#F59E0B',
     danger: '#EF4444'
   }
@@ -23,10 +24,11 @@ export const DarkThemeColors: ThemeColors = {
     background: '#111827',
     surface: '#1F2937',
     text: '#F3F4F6',
-    border: '#374151'
+    border: '#596382'
   },
   complementary: {
     success: '#10B981',
+    info: '#60A5FA',
     warning: '#F59E0B',
     danger: '#EF4444'
   }

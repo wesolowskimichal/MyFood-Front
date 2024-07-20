@@ -46,7 +46,7 @@ const Register = ({ navigation, route: _route }: RegisterScreenProps) => {
       const formData = new FormData()
       formData.append('username', username.trim())
       formData.append('password', password)
-      formData.append('email', email.trim())
+      formData.append('email', email.trim().toLowerCase())
       formData.append('first_name', firstName.trim())
       formData.append('last_name', lastName.trim())
       if (picture) {
@@ -68,7 +68,10 @@ const Register = ({ navigation, route: _route }: RegisterScreenProps) => {
       }
       const auth: User = response.data
       console.log(auth)
-      // dispatch(setAuth(auth));
+      navigation.navigate('Login', {
+        infoText: 'Successfully registered! Log in to your account',
+        lastUsername: username.trim()
+      })
     } catch (error) {
       let errorMessage = 'Registration failed'
       const inputErrors: { [key: string]: string | null } = {}

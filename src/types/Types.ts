@@ -71,17 +71,17 @@ import { NavigationProp, ParamListBase, RouteProp } from '@react-navigation/nati
 import { ColorValue } from 'react-native'
 
 //#region Navigation Types
+// could be added lastly logged in username in prop to Login
 export type RootStackParamList = {
-  // lastly logged in username in prop to Login
-  Login: undefined
+  Login: { infoText?: string; lastUsername?: string }
   Register: undefined
   Journal: undefined
   Test: undefined
 }
 
-export type LoginScreenProps = NativeStackScreenProps<ParamListBase, 'Login'>
-export type RegisterScreenProps = NativeStackScreenProps<ParamListBase, 'Register'>
-export type JournalScreenProps = NativeStackScreenProps<ParamListBase, 'Journal'>
+export type LoginScreenProps = NativeStackScreenProps<RootStackParamList, 'Login'>
+export type RegisterScreenProps = NativeStackScreenProps<RootStackParamList, 'Register'>
+export type JournalScreenProps = NativeStackScreenProps<RootStackParamList, 'Journal'>
 export type TestScreenProps = NativeStackScreenProps<ParamListBase, 'Test'>
 
 export type NavProps = {
@@ -102,6 +102,7 @@ export type ThemeColors = {
     border: ColorValue
   }
   complementary: {
+    info: ColorValue
     success: ColorValue
     warning: ColorValue
     danger: ColorValue

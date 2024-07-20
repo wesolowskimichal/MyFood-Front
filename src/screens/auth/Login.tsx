@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { api } from '../../services/Api'
 import { LoginScreenProps, ThemeColors, Token__FULL } from '../../types/Types'
@@ -8,7 +8,10 @@ import { RootState } from '../../redux/Store'
 import { Link } from '@react-navigation/native'
 import { AxiosError } from 'axios'
 
-const Login = ({ navigation, route: _route }: LoginScreenProps) => {
+const Login = ({ navigation: _navigation, route }: LoginScreenProps) => {
+  const infoText = route?.params?.infoText ?? null
+  const lastUsername = route?.params?.lastUsername ?? null
+
   const dispatch = useDispatch()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -42,6 +45,12 @@ const Login = ({ navigation, route: _route }: LoginScreenProps) => {
     }
   }
 
+  useEffect(() => {
+    if (lastUsername) {
+      setUsername(lastUsername)
+    }
+  }, [lastUsername])
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -53,6 +62,7 @@ const Login = ({ navigation, route: _route }: LoginScreenProps) => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
+      {infoText && <Text style={styles.infoText}>{infoText}</Text>}
       <TextInput
         style={styles.input}
         placeholder="Username"
@@ -106,6 +116,10 @@ const createStyles = (colors: ThemeColors) =>
       borderRadius: 4,
       color: colors.neutral.text,
       backgroundColor: colors.neutral.surface
+    },
+    infoText: {
+      color: colors.complementary.info,
+      marginTop: 8
     },
     errorText: {
       color: colors.complementary.danger,
