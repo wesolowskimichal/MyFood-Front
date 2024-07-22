@@ -2,17 +2,16 @@ import React, { useEffect, useState } from 'react'
 import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
-import { clearAuth, loadTokens } from '../../redux/slices/AuthSlice'
-import { validateToken } from '../../utils/Auth'
+import { loadTokens } from '../../redux/slices/AuthSlice'
 import Login from '../../screens/auth/Login'
 import { useAppSelector } from '../../hooks/useAppDispatch'
-import Journal from '../../screens/journal/Journal'
 import { getTheme } from '../../redux/slices/ThemeSlice'
 import { AppDispatch } from '../../redux/Store'
 import { useDispatch } from 'react-redux'
 import ScreenWrapper from '../screenWrapper/ScreenWrapper'
 import Register from '../../screens/auth/Register'
 import { RootStackParamList } from '../../types/Types'
+import BottomTabNavigator from '../bottomTabNavigator/BottomTabNavigator'
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
 
@@ -27,8 +26,9 @@ const AppNavigation = () => {
 
     const initializeAuth = async () => {
       // uncomment when login, register finished - it is auto reauth
-      // await dispatch(loadTokens());
-      await dispatch(clearAuth())
+      await dispatch(loadTokens())
+      // uncomment when you want to work on login, register page
+      // await dispatch(clearAuth())
     }
 
     initializeTheme()
@@ -48,20 +48,12 @@ const AppNavigation = () => {
       <Stack.Navigator>
         {authState.isAuthenticated ? (
           <Stack.Screen
-            name="Journal"
+            name="Main"
+            component={BottomTabNavigator}
             options={{
-              headerShown: false,
-              presentation: 'modal',
-              animationTypeForReplace: 'push',
-              animation: 'slide_from_right'
+              headerShown: false
             }}
-          >
-            {props => (
-              <ScreenWrapper>
-                <Journal {...props} />
-              </ScreenWrapper>
-            )}
-          </Stack.Screen>
+          />
         ) : (
           <>
             <Stack.Screen

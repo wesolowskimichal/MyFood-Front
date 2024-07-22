@@ -77,11 +77,14 @@ export type RootStackParamList = {
   Register: undefined
   Journal: undefined
   Test: undefined
+  Fridge: undefined
+  Main: undefined
 }
 
 export type LoginScreenProps = NativeStackScreenProps<RootStackParamList, 'Login'>
 export type RegisterScreenProps = NativeStackScreenProps<RootStackParamList, 'Register'>
 export type JournalScreenProps = NativeStackScreenProps<RootStackParamList, 'Journal'>
+export type FridgeScreenProps = NativeStackScreenProps<RootStackParamList, 'Fridge'>
 export type TestScreenProps = NativeStackScreenProps<ParamListBase, 'Test'>
 
 export type NavProps = {

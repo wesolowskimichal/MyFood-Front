@@ -9,3 +9,5 @@ expo-secure-store
 expo-image-picker
 expo-image-manipulator
 reac-native-navigation
+react-navigation-bottom-tabs
+react-native-vector-icons

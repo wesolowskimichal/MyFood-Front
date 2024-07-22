@@ -7,6 +7,7 @@ import { useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '../../redux/Store'
 import { useDispatch } from 'react-redux'
 import { toggleTheme } from '../../redux/slices/ThemeSlice'
+import ScreenWrapper from '../../components/screenWrapper/ScreenWrapper'
 
 const Journal = ({ navigation, route }: JournalScreenProps) => {
   const [date, setDate] = useState<Date>(new Date())
@@ -32,28 +33,30 @@ const Journal = ({ navigation, route }: JournalScreenProps) => {
   if (error) return <Text>Error fetching data</Text>
 
   return (
-    <View style={styles.Wrapper}>
-      <Button onPress={() => setShow(true)} title="Select Date" />
-      <Button onPress={() => dispatch(toggleTheme())} title="Toggle Theme" />
-      {show && (
-        <DateTimePicker testID="dateTimePicker" value={date} mode={'date'} display="default" onChange={onChange} />
-      )}
-      <FlatList
-        data={data?.results}
-        keyExtractor={item => item.id}
-        renderItem={({ item }) => (
-          <View>
-            <Text>{item.id}</Text>
-            <Text>{JSON.stringify(item.object)}</Text>
-          </View>
+    <ScreenWrapper>
+      <View style={styles.Wrapper}>
+        <Button onPress={() => setShow(true)} title="Select Date" />
+        <Button onPress={() => dispatch(toggleTheme())} title="Toggle Theme" />
+        {show && (
+          <DateTimePicker testID="dateTimePicker" value={date} mode={'date'} display="default" onChange={onChange} />
         )}
-        ListHeaderComponent={() => (
-          <View>
-            <Text>Total Journals: {data?.count}</Text>
-          </View>
-        )}
-      />
-    </View>
+        <FlatList
+          data={data?.results}
+          keyExtractor={item => item.id}
+          renderItem={({ item }) => (
+            <View>
+              <Text>{item.id}</Text>
+              <Text>{JSON.stringify(item.object)}</Text>
+            </View>
+          )}
+          ListHeaderComponent={() => (
+            <View>
+              <Text>Total Journals: {data?.count}</Text>
+            </View>
+          )}
+        />
+      </View>
+    </ScreenWrapper>
   )
 }
 
@@ -61,7 +64,6 @@ const createStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     Wrapper: {
       flex: 1,
-      padding: 16,
       backgroundColor: colors.primary
     }
   })
