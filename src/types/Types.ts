@@ -1,3 +1,8 @@
+import { NativeStackScreenProps } from '@react-navigation/native-stack'
+import { NavigationProp, ParamListBase, RouteProp } from '@react-navigation/native'
+import { ColorValue } from 'react-native'
+
+//#region Api Types
 export type Token = {
   access: string | null
   refresh: string | null
@@ -46,6 +51,14 @@ export interface ProductDetails extends _ID_URL_FIELD {
   added_by: User
 }
 
+export interface Meal extends _ID_URL_FIELD {
+  order: number
+  name: string
+  target_proteins: number | null
+  target_fat: number | null
+  target_carbons: number | null
+}
+
 export interface Fridge extends _ID_FIELD {
   product: ProductBase
   current_amount: number
@@ -63,12 +76,10 @@ export interface Journal extends _ID_URL_FIELD {
 }
 
 export type JournalPage = Page<Journal>
-
 export type FridgePage = Page<Fridge>
+export type MealPage = Page<Meal>
 
-import { NativeStackScreenProps } from '@react-navigation/native-stack'
-import { NavigationProp, ParamListBase, RouteProp } from '@react-navigation/native'
-import { ColorValue } from 'react-native'
+//#endregion
 
 //#region Navigation Types
 // could be added lastly logged in username in prop to Login
@@ -93,11 +104,13 @@ export type NavProps = {
 }
 //#endregopm
 
+//#region Theme
 export type Theme = 'light' | 'dark'
 
 export type ThemeColors = {
   primary: ColorValue
   accent: ColorValue
+  accentDark: ColorValue
   neutral: {
     background: ColorValue
     surface: ColorValue
@@ -111,3 +124,4 @@ export type ThemeColors = {
     danger: ColorValue
   }
 }
+//#endregion

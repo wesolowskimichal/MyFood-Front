@@ -4,16 +4,18 @@ import authReducer from './slices/AuthSlice'
 import themeReducer from './slices/ThemeSlice'
 import { fridgeApiSlice } from './api/slices/FridgeApiSlice'
 import { journalApiSlice } from './api/slices/JournalApiSlice'
+import { userMealApiSlice } from './api/slices/UserMealSlice'
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     theme: themeReducer,
     [fridgeApiSlice.reducerPath]: fridgeApiSlice.reducer,
-    [journalApiSlice.reducerPath]: journalApiSlice.reducer
+    [journalApiSlice.reducerPath]: journalApiSlice.reducer,
+    [userMealApiSlice.reducerPath]: userMealApiSlice.reducer
   },
   middleware: getDefaultMiddleware =>
-    getDefaultMiddleware().concat(fridgeApiSlice.middleware, journalApiSlice.middleware)
+    getDefaultMiddleware().concat(fridgeApiSlice.middleware, journalApiSlice.middleware, userMealApiSlice.middleware)
 })
 
 setupListeners(store.dispatch)

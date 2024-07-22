@@ -1,4 +1,4 @@
-import { ActivityIndicator, Button, FlatList, StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator, Button, FlatList, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useGetJournalsByDateQuery } from '../../redux/api/slices/JournalApiSlice'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { JournalScreenProps, ThemeColors } from '../../types/Types'
@@ -8,6 +8,8 @@ import { AppDispatch, RootState } from '../../redux/Store'
 import { useDispatch } from 'react-redux'
 import { toggleTheme } from '../../redux/slices/ThemeSlice'
 import ScreenWrapper from '../../components/screenWrapper/ScreenWrapper'
+import { useGetMealsQuery } from '../../redux/api/slices/UserMealSlice'
+import Meal from '../../components/meal/Meal'
 
 const Journal = ({ navigation, route }: JournalScreenProps) => {
   const [date, setDate] = useState<Date>(new Date())
@@ -29,23 +31,30 @@ const Journal = ({ navigation, route }: JournalScreenProps) => {
     day: date.getDate()
   })
 
-  if (isLoading) return <ActivityIndicator size={'large'} />
+  const { data: meals, error: mealsError, isLoading: areMealsLoading } = useGetMealsQuery()
+
+  if (isLoading || areMealsLoading) return <ActivityIndicator size={'large'} />
   if (error) return <Text>Error fetching data</Text>
 
   return (
     <ScreenWrapper>
-      <View style={styles.Wrapper}>
-        <Button onPress={() => setShow(true)} title="Select Date" />
+      <ScrollView style={styles.Wrapper} nestedScrollEnabled>
         <Button onPress={() => dispatch(toggleTheme())} title="Toggle Theme" />
+        {/* <Button onPress={() => setShow(true)} title="Select Date" />
         {show && (
           <DateTimePicker testID="dateTimePicker" value={date} mode={'date'} display="default" onChange={onChange} />
-        )}
-        <FlatList
+        )} */}
+        {meals?.results.map(meal => (
+          <Meal key={meal.id} meal={meal} />
+        ))}
+        {/* <Text>{JSON.stringify(data?.results)}</Text> */}
+        {/* <FlatList
           data={data?.results}
           keyExtractor={item => item.id}
           renderItem={({ item }) => (
             <View>
               <Text>{item.id}</Text>
+              <Text>{JSON.stringify(item.object)}</Text>
               <Text>{JSON.stringify(item.object)}</Text>
             </View>
           )}
@@ -54,8 +63,8 @@ const Journal = ({ navigation, route }: JournalScreenProps) => {
               <Text>Total Journals: {data?.count}</Text>
             </View>
           )}
-        />
-      </View>
+        /> */}
+      </ScrollView>
     </ScreenWrapper>
   )
 }
@@ -65,6 +74,7 @@ const createStyles = (colors: ThemeColors) =>
     Wrapper: {
       flex: 1,
       backgroundColor: colors.primary
+      // justifyContent: 'flex-start'
     }
   })
 

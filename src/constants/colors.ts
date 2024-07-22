@@ -3,6 +3,7 @@ import { ThemeColors } from '../types/Types'
 export const LightThemeColors: ThemeColors = {
   primary: '#F0F0F0',
   accent: '#3B82F6',
+  accentDark: '#f00 ',
   neutral: {
     background: '#FFFFFF',
     surface: '#F3F4F6',
@@ -20,6 +21,7 @@ export const LightThemeColors: ThemeColors = {
 export const DarkThemeColors: ThemeColors = {
   primary: '#1F1F1F',
   accent: '#F97316',
+  accentDark: '#9A3412 ',
   neutral: {
     background: '#111827',
     surface: '#1F2937',
