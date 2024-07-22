@@ -1,9 +1,10 @@
 import { memo, useMemo, useState } from 'react'
 import { Meal as IMeal, ThemeColors } from '../../types/Types'
-import { StyleSheet, Text, View } from 'react-native'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/Store'
 import Collapsible, { CollapsibleContent, CollapsibleHeader } from '../collapsible/Collapsible'
+import Icon from 'react-native-vector-icons/Ionicons'
 
 type MealProps = {
   meal: IMeal
@@ -22,7 +23,12 @@ const Meal = ({ meal }: MealProps) => {
       <CollapsibleHeader>
         <View style={styles.HeaderContainer}>
           <View style={styles.MealInfo}>
-            <Text style={styles.MealName}>{meal.name}</Text>
+            <View style={styles.MealHeader}>
+              <Text style={styles.MealName}>{meal.name}</Text>
+              <Pressable>
+                <Icon name="add-circle-outline" size={23} color={colors.accent} />
+              </Pressable>
+            </View>
             <View style={styles.NutrientTable}>
               <View style={styles.NutrientRow}>
                 <Text style={styles.NutrientLabel}></Text>
@@ -104,6 +110,11 @@ const createStyles = (colors: ThemeColors) =>
     },
     MealInfo: {
       flex: 1
+    },
+    MealHeader: {
+      flex: 1,
+      flexDirection: 'row',
+      justifyContent: 'space-between'
     },
     MealName: {
       color: colors.neutral.text,
