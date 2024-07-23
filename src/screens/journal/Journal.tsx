@@ -2,7 +2,7 @@ import { ActivityIndicator, Button, FlatList, ScrollView, StyleSheet, Text, View
 import { useGetJournalsByDateQuery } from '../../redux/api/slices/JournalApiSlice'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { JournalMeal, JournalScreenProps, ThemeColors } from '../../types/Types'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '../../redux/Store'
 import { useDispatch } from 'react-redux'
@@ -54,6 +54,10 @@ const Journal = ({ navigation, route }: JournalScreenProps) => {
       setJournalMeals(Array.from(journalMealsMap.values()))
     }
   }, [journalEntries, meals])
+
+  const handleMealChange = useCallback(() => {
+    
+  }, [setJournalMeals])
 
   if (journalEntriesLoading || mealsLoading) return <ActivityIndicator size={'large'} />
   if (journalEntriesError) return <Text>Fetching Journal Entries Error</Text>

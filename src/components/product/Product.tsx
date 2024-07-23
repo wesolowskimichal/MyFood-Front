@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { View, Text, StyleSheet, TextInput, Pressable } from 'react-native'
-import { ProductDetails, Unit, ThemeColors } from '../../types/Types'
+import { ProductDetails, Unit, ThemeColors, Nutrients } from '../../types/Types'
 import { UnitAmountConverter } from '../../helpers/UnitAmountConverter'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/Store'
@@ -11,11 +11,13 @@ import { NutrientsCounter } from '../../helpers/NutrientsCounter'
 type ProductProps = {
   product: ProductDetails
   defaultAmount: number
+  onNutrientsChange: (carbsDiff: number, proteinsDiff: number, fatsDiff: number) => void
 }
 
-const Product = ({ product, defaultAmount }: ProductProps) => {
+const Product = ({ product, defaultAmount, onNutrientsChange }: ProductProps) => {
   const [unit, setUnit] = useState<Unit>(product.unit)
   const [amount, setAmount] = useState<number>(defaultAmount)
+  const [shouldDecrease, setShouldDecrease] = useState(true)
 
   const [proteins, setProteins] = useState(0)
   const [fats, setFats] = useState(0)
@@ -23,6 +25,7 @@ const Product = ({ product, defaultAmount }: ProductProps) => {
 
   const colors = useSelector((state: RootState) => state.theme.colors)
   const styles = useMemo(() => createStyles(colors), [colors])
+  const nutrients = useMemo(() => NutrientsCounter(defaultAmount, product), [defaultAmount, product, amount])
   const avaibleUnits = useMemo((): Unit[] => {
     if (product.unit === 'g' || product.unit === 'kg') {
       return ['g', 'kg']
@@ -31,11 +34,10 @@ const Product = ({ product, defaultAmount }: ProductProps) => {
   }, [product.unit])
 
   useEffect(() => {
-    const nutrients = NutrientsCounter(amount, product)
     setProteins(Math.floor(nutrients.proteins))
     setCarbs(Math.floor(nutrients.carbs))
     setFats(Math.floor(nutrients.fats))
-  }, [amount])
+  }, [defaultAmount])
 
   useEffect(() => {
     const convertedData = UnitAmountConverter(defaultAmount, product.unit)
@@ -43,10 +45,44 @@ const Product = ({ product, defaultAmount }: ProductProps) => {
     setAmount(convertedData.amount)
   }, [defaultAmount, product.unit])
 
-  const handleAmountChange = useCallback((text: string) => {
-    const numericValue = parseFloat(text)
-    setAmount(isNaN(numericValue) ? 0 : numericValue)
+  const updateNutrients = useCallback((nutrients: Nutrients) => {
+    setProteins(Math.floor(nutrients.proteins))
+    setCarbs(Math.floor(nutrients.carbs))
+    setFats(Math.floor(nutrients.fats))
   }, [])
+
+  const handleAmountChange = (text: string) => {
+    const numericValue = parseFloat(text)
+    setAmount(prev => {
+      if (isNaN(numericValue)) {
+        if (shouldDecrease) {
+          const nutrientsNew = NutrientsCounter(prev, product)
+          const nutrients_ = {
+            proteins: 0,
+            fats: 0,
+            carbs: 0
+          }
+          updateNutrients(nutrients_)
+          onNutrientsChange(
+            Math.floor(nutrientsNew.carbs),
+            Math.floor(nutrientsNew.proteins),
+            Math.floor(nutrientsNew.fats)
+          )
+          setShouldDecrease(false)
+        }
+        return 0
+      }
+      setShouldDecrease(true)
+      const amount = numericValue
+      const nutrientsNew = NutrientsCounter(amount, product)
+      const proteinsDiff = proteins - nutrientsNew.proteins
+      const carbsDiff = carbs - nutrientsNew.carbs
+      const fatsDiff = fats - nutrientsNew.fats
+      updateNutrients(nutrientsNew)
+      onNutrientsChange(carbsDiff, proteinsDiff, fatsDiff)
+      return amount
+    })
+  }
 
   return (
     <View style={styles.Product}>

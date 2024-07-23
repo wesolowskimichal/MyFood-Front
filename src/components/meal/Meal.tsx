@@ -1,5 +1,5 @@
-import { memo, useEffect, useMemo, useState } from 'react'
-import { Meal as IMeal, JournalMeal, ThemeColors } from '../../types/Types'
+import { memo, useCallback, useEffect, useMemo, useState } from 'react'
+import { Meal as IMeal, JournalMeal, Nutrients, ThemeColors } from '../../types/Types'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/Store'
@@ -20,13 +20,28 @@ const Meal = ({ journalMeal }: MealProps) => {
   const [fats, setFats] = useState(0)
   const [carbs, setCarbs] = useState(0)
 
-  // for now ok - in future refactor to handle from product direct changes on journal
-  useEffect(() => {
-    const nutrients = NutrientsCounterMap(journalMeal)
+  const updateNutrients = useCallback((nutrients: Nutrients) => {
     setProteins(Math.floor(nutrients.proteins))
     setCarbs(Math.floor(nutrients.carbs))
     setFats(Math.floor(nutrients.fats))
   }, [])
+
+  useEffect(() => {
+    const nutrients = NutrientsCounterMap(journalMeal)
+    updateNutrients(nutrients)
+  }, [])
+
+  const handleOnNutrientsChange = useCallback(
+    (carbsDiff: number, proteinsDiff: number, fatsDiff: number) => {
+      const nutrients = {
+        proteins: proteins - proteinsDiff,
+        fats: fats - fatsDiff,
+        carbs: carbs - carbsDiff
+      }
+      updateNutrients(nutrients)
+    },
+    [proteins, fats, carbs]
+  )
 
   return (
     <Collapsible collapsibleStyle={styles.Meal}>
@@ -70,7 +85,12 @@ const Meal = ({ journalMeal }: MealProps) => {
       <CollapsibleContent itemStyle={styles.CollapsibleContent}>
         <View style={styles.MealDetails}>
           {journalMeal.elements.map(element => (
-            <Product key={element.obj.id} product={element.obj} defaultAmount={element.amount} />
+            <Product
+              key={element.obj.id}
+              product={element.obj}
+              defaultAmount={element.amount}
+              onNutrientsChange={handleOnNutrientsChange}
+            />
           ))}
         </View>
       </CollapsibleContent>

@@ -88,6 +88,12 @@ export interface JournalMeal {
   }[]
 }
 
+export type Nutrients = {
+  proteins: number
+  fats: number
+  carbs: number
+}
+
 export type JournalPage = Page<Journal>
 export type FridgePage = Page<Fridge>
 export type MealPage = Page<Meal>

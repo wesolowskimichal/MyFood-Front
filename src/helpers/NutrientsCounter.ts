@@ -1,9 +1,6 @@
-import { JournalMeal, ProductDetails } from '../types/Types'
+import { JournalMeal, Nutrients, ProductDetails } from '../types/Types'
 
-export const NutrientsCounter = (
-  amount: number,
-  product: ProductDetails
-): { proteins: number; fats: number; carbs: number } => {
+export const NutrientsCounter = (amount: number, product: ProductDetails): Nutrients => {
   return {
     proteins: amount * (product.protein / product.amount),
     fats: amount * (product.fat / product.amount),
@@ -11,7 +8,7 @@ export const NutrientsCounter = (
   }
 }
 
-export const NutrientsCounterMap = (journalMeal: JournalMeal): { proteins: number; fats: number; carbs: number } => {
+export const NutrientsCounterMap = (journalMeal: JournalMeal): Nutrients => {
   return journalMeal.elements.reduce(
     (acc, curr) => ({
       proteins: acc.proteins + curr.amount * (curr.obj.protein / curr.obj.amount),
