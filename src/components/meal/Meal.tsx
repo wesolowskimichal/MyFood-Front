@@ -1,4 +1,4 @@
-import { memo, useMemo, useState } from 'react'
+import { memo, useEffect, useMemo, useState } from 'react'
 import { Meal as IMeal, JournalMeal, ThemeColors } from '../../types/Types'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useSelector } from 'react-redux'
@@ -6,20 +6,27 @@ import { RootState } from '../../redux/Store'
 import Collapsible, { CollapsibleContent, CollapsibleHeader } from '../collapsible/Collapsible'
 import Icon from 'react-native-vector-icons/Ionicons'
 import Product from '../product/Product'
+import { NutrientsCounterMap } from '../../helpers/NutrientsCounter'
 
 type MealProps = {
   journalMeal: JournalMeal
 }
 
 const Meal = ({ journalMeal }: MealProps) => {
-  console.log(journalMeal.elements)
-
   const colors = useSelector((state: RootState) => state.theme.colors)
   const styles = useMemo(() => createStyles(colors), [colors])
 
-  const [currentProteins, setCurrentProteins] = useState(0)
-  const [currentFats, setCurrentFats] = useState(0)
-  const [currentCarbs, setCurrentCarbs] = useState(0)
+  const [proteins, setProteins] = useState(0)
+  const [fats, setFats] = useState(0)
+  const [carbs, setCarbs] = useState(0)
+
+  // for now ok - in future refactor to handle from product direct changes on journal
+  useEffect(() => {
+    const nutrients = NutrientsCounterMap(journalMeal)
+    setProteins(Math.floor(nutrients.proteins))
+    setCarbs(Math.floor(nutrients.carbs))
+    setFats(Math.floor(nutrients.fats))
+  }, [])
 
   return (
     <Collapsible collapsibleStyle={styles.Meal}>
@@ -52,9 +59,9 @@ const Meal = ({ journalMeal }: MealProps) => {
 
               <View style={styles.NutrientRow}>
                 <Text style={styles.NutrientLabel}></Text>
-                <Text style={styles.NutrientValue}>{currentProteins}</Text>
-                <Text style={styles.NutrientValue}>{currentCarbs}</Text>
-                <Text style={styles.NutrientValue}>{currentFats}</Text>
+                <Text style={styles.NutrientValue}>{proteins}</Text>
+                <Text style={styles.NutrientValue}>{carbs}</Text>
+                <Text style={styles.NutrientValue}>{fats}</Text>
               </View>
             </View>
           </View>
@@ -65,8 +72,6 @@ const Meal = ({ journalMeal }: MealProps) => {
           {journalMeal.elements.map(element => (
             <Product key={element.obj.id} product={element.obj} defaultAmount={element.amount} />
           ))}
-
-          {/* other details */}
         </View>
       </CollapsibleContent>
     </Collapsible>

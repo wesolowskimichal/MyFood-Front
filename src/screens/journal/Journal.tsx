@@ -32,7 +32,6 @@ const Journal = ({ navigation, route }: JournalScreenProps) => {
 
   useEffect(() => {
     if (journalEntries && meals) {
-      console.log(journalEntries)
       const journalMealsMap = meals.results.reduce((acc, meal) => {
         acc.set(meal.id, { meal, elements: [] })
         return acc
