@@ -1,8 +1,8 @@
 import { ActivityIndicator, Button, FlatList, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useGetJournalsByDateQuery } from '../../redux/api/slices/JournalApiSlice'
 import DateTimePicker from '@react-native-community/datetimepicker'
-import { JournalScreenProps, ThemeColors } from '../../types/Types'
-import { useMemo, useState } from 'react'
+import { JournalMeal, JournalScreenProps, ThemeColors } from '../../types/Types'
+import { useEffect, useMemo, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '../../redux/Store'
 import { useDispatch } from 'react-redux'
@@ -13,57 +13,60 @@ import Meal from '../../components/meal/Meal'
 
 const Journal = ({ navigation, route }: JournalScreenProps) => {
   const [date, setDate] = useState<Date>(new Date())
-  const [show, setShow] = useState<boolean>(false)
-
+  const [journalMeals, setJournalMeals] = useState<JournalMeal[]>([])
   const colors = useSelector((state: RootState) => state.theme.colors)
   const styles = useMemo(() => createStyles(colors), [colors])
   const dispatch = useDispatch<AppDispatch>()
 
-  const onChange = (event: any, selectedDate: Date | undefined) => {
-    const currentDate = selectedDate || date
-    setShow(false)
-    setDate(currentDate)
-  }
-
-  const { data, error, isLoading } = useGetJournalsByDateQuery({
+  const {
+    data: journalEntries,
+    error: journalEntriesError,
+    isLoading: journalEntriesLoading
+  } = useGetJournalsByDateQuery({
     year: date.getFullYear(),
     month: date.getMonth() + 1,
     day: date.getDate()
   })
 
-  const { data: meals, error: mealsError, isLoading: areMealsLoading } = useGetMealsQuery()
+  const { data: meals, error: mealsError, isLoading: mealsLoading } = useGetMealsQuery()
 
-  if (isLoading || areMealsLoading) return <ActivityIndicator size={'large'} />
-  if (error) return <Text>Error fetching data</Text>
+  useEffect(() => {
+    if (journalEntries && meals) {
+      console.log(journalEntries)
+      const journalMealsMap = meals.results.reduce((acc, meal) => {
+        acc.set(meal.id, { meal, elements: [] })
+        return acc
+      }, new Map<string, JournalMeal>())
+
+      if (Array.isArray(journalEntries)) {
+        journalEntries.reduce((acc, entry) => {
+          const mealId = entry.object.meal.id
+          if (!acc.has(mealId)) {
+            acc.set(mealId, { meal: entry.object.meal, elements: [] })
+          }
+          acc.get(mealId)!.elements.push({
+            obj: entry.object.entry,
+            amount: entry.object.amount
+          })
+          return acc
+        }, journalMealsMap)
+      }
+
+      setJournalMeals(Array.from(journalMealsMap.values()))
+    }
+  }, [journalEntries, meals])
+
+  if (journalEntriesLoading || mealsLoading) return <ActivityIndicator size={'large'} />
+  if (journalEntriesError) return <Text>Fetching Journal Entries Error</Text>
+  if (mealsError) return <Text>Fetching Meals Error</Text>
 
   return (
     <ScreenWrapper>
       <ScrollView style={styles.Wrapper} nestedScrollEnabled>
         <Button onPress={() => dispatch(toggleTheme())} title="Toggle Theme" />
-        {/* <Button onPress={() => setShow(true)} title="Select Date" />
-        {show && (
-          <DateTimePicker testID="dateTimePicker" value={date} mode={'date'} display="default" onChange={onChange} />
-        )} */}
-        {meals?.results.map(meal => (
-          <Meal key={meal.id} meal={meal} />
+        {journalMeals.map(journalMeal => (
+          <Meal key={journalMeal.meal.id} journalMeal={journalMeal} />
         ))}
-        {/* <Text>{JSON.stringify(data?.results)}</Text> */}
-        {/* <FlatList
-          data={data?.results}
-          keyExtractor={item => item.id}
-          renderItem={({ item }) => (
-            <View>
-              <Text>{item.id}</Text>
-              <Text>{JSON.stringify(item.object)}</Text>
-              <Text>{JSON.stringify(item.object)}</Text>
-            </View>
-          )}
-          ListHeaderComponent={() => (
-            <View>
-              <Text>Total Journals: {data?.count}</Text>
-            </View>
-          )}
-        /> */}
       </ScrollView>
     </ScreenWrapper>
   )
@@ -74,7 +77,6 @@ const createStyles = (colors: ThemeColors) =>
     Wrapper: {
       flex: 1,
       backgroundColor: colors.primary
-      // justifyContent: 'flex-start'
     }
   })
 

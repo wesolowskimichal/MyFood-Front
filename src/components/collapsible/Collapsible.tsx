@@ -9,16 +9,16 @@ type CollapsibleProps = {
   headerStyle?: StyleProp<ViewStyle>
 }
 
-type CollapsibleItemProps = {
+type CollapsibleComponentProps = {
   children: ReactNode
   itemStyle?: StyleProp<ViewStyle>
 }
 
-export const CollapsibleHeader = ({ children, itemStyle }: CollapsibleItemProps) => (
+export const CollapsibleHeader = ({ children, itemStyle }: CollapsibleComponentProps) => (
   <View style={itemStyle}>{children}</View>
 )
 
-export const CollapsibleContent = ({ children, itemStyle }: CollapsibleItemProps) => (
+export const CollapsibleContent = ({ children, itemStyle }: CollapsibleComponentProps) => (
   <ScrollView style={itemStyle} nestedScrollEnabled>
     {children}
   </ScrollView>

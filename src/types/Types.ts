@@ -8,6 +8,8 @@ export type Token = {
   refresh: string | null
 }
 
+export type Unit = 'kg' | 'g' | 'ml' | 'l'
+
 export type Token__FULL = {
   access: string
   refresh: string
@@ -40,11 +42,11 @@ export interface ProductBase extends _ID_URL_FIELD {
   barcode: string
   name: string
   amount: number
-  unit: 'kg' | 'g' | 'ml' | 'l'
+  unit: Unit
   picture: string
 }
 
-export interface ProductDetails extends _ID_URL_FIELD {
+export interface ProductDetails extends ProductBase {
   carbons: number
   fat: number
   protein: number
@@ -69,10 +71,21 @@ export interface Fridge extends _ID_FIELD {
 export interface Journal extends _ID_URL_FIELD {
   date: Date
   object: {
-    type: string
-    entry: string
+    type: 'product' | 'recipe'
+    meal: Meal
+    // entry: ProductDetails | Recipe
+    entry: ProductDetails
     amount: number
   }
+}
+
+export interface JournalMeal {
+  meal: Meal
+  elements: {
+    // obj: ProductDetails | Recipe
+    obj: ProductDetails
+    amount: number
+  }[]
 }
 
 export type JournalPage = Page<Journal>

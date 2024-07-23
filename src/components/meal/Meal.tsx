@@ -1,16 +1,19 @@
 import { memo, useMemo, useState } from 'react'
-import { Meal as IMeal, ThemeColors } from '../../types/Types'
+import { Meal as IMeal, JournalMeal, ThemeColors } from '../../types/Types'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/Store'
 import Collapsible, { CollapsibleContent, CollapsibleHeader } from '../collapsible/Collapsible'
 import Icon from 'react-native-vector-icons/Ionicons'
+import Product from '../product/Product'
 
 type MealProps = {
-  meal: IMeal
+  journalMeal: JournalMeal
 }
 
-const Meal = ({ meal }: MealProps) => {
+const Meal = ({ journalMeal }: MealProps) => {
+  console.log(journalMeal.elements)
+
   const colors = useSelector((state: RootState) => state.theme.colors)
   const styles = useMemo(() => createStyles(colors), [colors])
 
@@ -24,7 +27,7 @@ const Meal = ({ meal }: MealProps) => {
         <View style={styles.HeaderContainer}>
           <View style={styles.MealInfo}>
             <View style={styles.MealHeader}>
-              <Text style={styles.MealName}>{meal.name}</Text>
+              <Text style={styles.MealName}>{journalMeal.meal.name}</Text>
               <Pressable>
                 <Icon name="add-circle-outline" size={23} color={colors.accent} />
               </Pressable>
@@ -36,14 +39,16 @@ const Meal = ({ meal }: MealProps) => {
                 <Text style={styles.NutrientHeader}>C</Text>
                 <Text style={styles.NutrientHeader}>F</Text>
               </View>
-              {meal.target_carbons !== null && meal.target_fat !== null && meal.target_proteins !== null && (
-                <View style={styles.NutrientRow}>
-                  <Text style={styles.NutrientLabel}>T:</Text>
-                  <Text style={styles.NutrientValue}>{meal.target_proteins ?? '-'}</Text>
-                  <Text style={styles.NutrientValue}>{meal.target_proteins ?? '-'}</Text>
-                  <Text style={styles.NutrientValue}>{meal.target_fat ?? '-'}</Text>
-                </View>
-              )}
+              {journalMeal.meal.target_carbons !== null &&
+                journalMeal.meal.target_fat !== null &&
+                journalMeal.meal.target_proteins !== null && (
+                  <View style={styles.NutrientRow}>
+                    <Text style={styles.NutrientLabel}>T:</Text>
+                    <Text style={styles.NutrientValue}>{journalMeal.meal.target_proteins ?? '-'}</Text>
+                    <Text style={styles.NutrientValue}>{journalMeal.meal.target_proteins ?? '-'}</Text>
+                    <Text style={styles.NutrientValue}>{journalMeal.meal.target_fat ?? '-'}</Text>
+                  </View>
+                )}
 
               <View style={styles.NutrientRow}>
                 <Text style={styles.NutrientLabel}></Text>
@@ -57,31 +62,9 @@ const Meal = ({ meal }: MealProps) => {
       </CollapsibleHeader>
       <CollapsibleContent itemStyle={styles.CollapsibleContent}>
         <View style={styles.MealDetails}>
-          <Text style={styles.MealDetail}>Order: {meal.order}</Text>
-          <Text style={styles.MealDetail}>Order: {meal.order}</Text>
-          <Text style={styles.MealDetail}>Order: {meal.order}</Text>
-          <Text style={styles.MealDetail}>Order: {meal.order}</Text>
-          <Text style={styles.MealDetail}>Order: {meal.order}</Text>
-          <Text style={styles.MealDetail}>Order: {meal.order}</Text>
-          <Text style={styles.MealDetail}>Order: {meal.order}</Text>
-          <Text style={styles.MealDetail}>Order: {meal.order}</Text>
-          <Text style={styles.MealDetail}>Order: {meal.order}</Text>
-          <Text style={styles.MealDetail}>Order: {meal.order}</Text>
-          <Text style={styles.MealDetail}>Order: {meal.order}</Text>
-          <Text style={styles.MealDetail}>Order: {meal.order}</Text>
-          <Text style={styles.MealDetail}>Order: {meal.order}</Text>
-          <Text style={styles.MealDetail}>Order: {meal.order}</Text>
-          <Text style={styles.MealDetail}>Order: {meal.order}</Text>
-          <Text style={styles.MealDetail}>Order: {meal.order}</Text>
-          <Text style={styles.MealDetail}>Order: {meal.order}</Text>
-          <Text style={styles.MealDetail}>Order: {meal.order}</Text>
-          <Text style={styles.MealDetail}>Order: {meal.order}</Text>
-          <Text style={styles.MealDetail}>Order: {meal.order}</Text>
-          <Text style={styles.MealDetail}>Order: {meal.order}</Text>
-          <Text style={styles.MealDetail}>Order: {meal.order}</Text>
-          <Text style={styles.MealDetail}>Order: {meal.order}</Text>
-          <Text style={styles.MealDetail}>Order: {meal.order}</Text>
-          <Text style={styles.MealDetail}>Order: {meal.order}</Text>
+          {journalMeal.elements.map(element => (
+            <Product key={element.obj.id} product={element.obj} defaultAmount={element.amount} />
+          ))}
 
           {/* other details */}
         </View>
