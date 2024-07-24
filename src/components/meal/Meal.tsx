@@ -7,6 +7,7 @@ import Collapsible, { CollapsibleContent, CollapsibleHeader } from '../collapsib
 import Icon from 'react-native-vector-icons/Ionicons'
 import Product from '../product/Product'
 import { NutrientsCounterMap } from '../../helpers/NutrientsCounter'
+import { CountKcal } from '../../helpers/CountKcal'
 
 type MealProps = {
   journalMeal: JournalMeal
@@ -19,6 +20,7 @@ const Meal = ({ journalMeal }: MealProps) => {
   const [proteins, setProteins] = useState(0)
   const [fats, setFats] = useState(0)
   const [carbs, setCarbs] = useState(0)
+  const kcal = useMemo(() => CountKcal({ proteins: proteins, fats: fats, carbs: carbs }), [fats, carbs, proteins])
 
   const updateNutrients = useCallback((nutrients: Nutrients) => {
     setProteins(Math.floor(nutrients.proteins))
@@ -57,6 +59,7 @@ const Meal = ({ journalMeal }: MealProps) => {
             <View style={styles.NutrientTable}>
               <View style={styles.NutrientRow}>
                 <Text style={styles.NutrientLabel}></Text>
+                <Text style={styles.NutrientHeader}>kcal</Text>
                 <Text style={styles.NutrientHeader}>P</Text>
                 <Text style={styles.NutrientHeader}>C</Text>
                 <Text style={styles.NutrientHeader}>F</Text>
@@ -66,6 +69,13 @@ const Meal = ({ journalMeal }: MealProps) => {
                 journalMeal.meal.target_proteins !== null && (
                   <View style={styles.NutrientRow}>
                     <Text style={styles.NutrientLabel}>T:</Text>
+                    <Text style={styles.NutrientValue}>
+                      {CountKcal({
+                        proteins: journalMeal.meal.target_proteins,
+                        fats: journalMeal.meal.target_fat,
+                        carbs: journalMeal.meal.target_carbons
+                      })}
+                    </Text>
                     <Text style={styles.NutrientValue}>{journalMeal.meal.target_proteins ?? '-'}</Text>
                     <Text style={styles.NutrientValue}>{journalMeal.meal.target_proteins ?? '-'}</Text>
                     <Text style={styles.NutrientValue}>{journalMeal.meal.target_fat ?? '-'}</Text>
@@ -74,6 +84,7 @@ const Meal = ({ journalMeal }: MealProps) => {
 
               <View style={styles.NutrientRow}>
                 <Text style={styles.NutrientLabel}></Text>
+                <Text style={styles.NutrientValue}>{kcal}</Text>
                 <Text style={styles.NutrientValue}>{proteins}</Text>
                 <Text style={styles.NutrientValue}>{carbs}</Text>
                 <Text style={styles.NutrientValue}>{fats}</Text>

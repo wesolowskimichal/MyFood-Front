@@ -4,9 +4,9 @@ import { ProductDetails, Unit, ThemeColors, Nutrients } from '../../types/Types'
 import { UnitAmountConverter } from '../../helpers/UnitAmountConverter'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/Store'
-import RNPickerSelect from 'react-native-picker-select'
 import Dialog, { DialogContent, DialogTrigger } from '../dialog/Dialog'
 import { NutrientsCounter } from '../../helpers/NutrientsCounter'
+import { CountKcal } from '../../helpers/CountKcal'
 
 type ProductProps = {
   product: ProductDetails
@@ -22,6 +22,7 @@ const Product = ({ product, defaultAmount, onNutrientsChange }: ProductProps) =>
   const [proteins, setProteins] = useState(0)
   const [fats, setFats] = useState(0)
   const [carbs, setCarbs] = useState(0)
+  const kcal = useMemo(() => CountKcal({ proteins: proteins, fats: fats, carbs: carbs }), [fats, carbs, proteins])
 
   const colors = useSelector((state: RootState) => state.theme.colors)
   const styles = useMemo(() => createStyles(colors), [colors])
@@ -103,6 +104,7 @@ const Product = ({ product, defaultAmount, onNutrientsChange }: ProductProps) =>
         </Dialog>
       </View>
       <View style={styles.Row}>
+        <Text style={styles.NutrientValue}>{kcal}</Text>
         <Text style={styles.NutrientValue}>{proteins}</Text>
         <Text style={styles.NutrientValue}>{carbs}</Text>
         <Text style={styles.NutrientValue}>{fats}</Text>
