@@ -3,7 +3,7 @@ import { Unit } from '../types/Types'
 export const UnitAmountConverter = (amount: number, unit: Unit): { amount: number; unit: Unit } => {
   let newAmount = amount
   let newUnit = unit
-  if (unit === 'g' && amount > 1000) {
+  if (unit === 'g' && amount > 1000 && amount % 1000 === 0) {
     newAmount = Math.floor(amount / 1000)
     newUnit = 'kg'
   }
@@ -11,7 +11,7 @@ export const UnitAmountConverter = (amount: number, unit: Unit): { amount: numbe
     newAmount = Math.floor(amount * 1000)
     newUnit = 'g'
   }
-  if (unit === 'ml' && amount > 1000) {
+  if (unit === 'ml' && amount > 1000 && amount % 1000 === 0) {
     newAmount = Math.floor(amount / 1000)
     newUnit = 'kg'
   }

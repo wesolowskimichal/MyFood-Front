@@ -25,7 +25,6 @@ const Product = ({ product, defaultAmount, onNutrientsChange }: ProductProps) =>
 
   const colors = useSelector((state: RootState) => state.theme.colors)
   const styles = useMemo(() => createStyles(colors), [colors])
-  const nutrients = useMemo(() => NutrientsCounter(defaultAmount, product), [defaultAmount, product, amount])
   const avaibleUnits = useMemo((): Unit[] => {
     if (product.unit === 'g' || product.unit === 'kg') {
       return ['g', 'kg']
@@ -34,16 +33,12 @@ const Product = ({ product, defaultAmount, onNutrientsChange }: ProductProps) =>
   }, [product.unit])
 
   useEffect(() => {
-    setProteins(Math.floor(nutrients.proteins))
-    setCarbs(Math.floor(nutrients.carbs))
-    setFats(Math.floor(nutrients.fats))
-  }, [defaultAmount])
-
-  useEffect(() => {
     const convertedData = UnitAmountConverter(defaultAmount, product.unit)
     setUnit(convertedData.unit)
     setAmount(convertedData.amount)
-  }, [defaultAmount, product.unit])
+    const nutrients = NutrientsCounter(convertedData.amount, convertedData.unit, product)
+    updateNutrients(nutrients)
+  }, [defaultAmount, product])
 
   const updateNutrients = useCallback((nutrients: Nutrients) => {
     setProteins(Math.floor(nutrients.proteins))
@@ -51,38 +46,37 @@ const Product = ({ product, defaultAmount, onNutrientsChange }: ProductProps) =>
     setFats(Math.floor(nutrients.fats))
   }, [])
 
-  const handleAmountChange = (text: string) => {
-    const numericValue = parseFloat(text)
-    setAmount(prev => {
-      if (isNaN(numericValue)) {
-        if (shouldDecrease) {
-          const nutrientsNew = NutrientsCounter(prev, product)
-          const nutrients_ = {
-            proteins: 0,
-            fats: 0,
-            carbs: 0
+  const handleAmountChange = useCallback(
+    (text: string) => {
+      const numericValue = parseFloat(text)
+      setAmount(prev => {
+        if (isNaN(numericValue) || numericValue <= 0) {
+          if (shouldDecrease) {
+            const nutrientsNew = NutrientsCounter(prev, unit, product)
+            const nutrients_ = { proteins: 0, fats: 0, carbs: 0 }
+            updateNutrients(nutrients_)
+            onNutrientsChange(
+              Math.floor(nutrientsNew.carbs),
+              Math.floor(nutrientsNew.proteins),
+              Math.floor(nutrientsNew.fats)
+            )
+            setShouldDecrease(false)
           }
-          updateNutrients(nutrients_)
-          onNutrientsChange(
-            Math.floor(nutrientsNew.carbs),
-            Math.floor(nutrientsNew.proteins),
-            Math.floor(nutrientsNew.fats)
-          )
-          setShouldDecrease(false)
+          return 0
         }
-        return 0
-      }
-      setShouldDecrease(true)
-      const amount = numericValue
-      const nutrientsNew = NutrientsCounter(amount, product)
-      const proteinsDiff = proteins - nutrientsNew.proteins
-      const carbsDiff = carbs - nutrientsNew.carbs
-      const fatsDiff = fats - nutrientsNew.fats
-      updateNutrients(nutrientsNew)
-      onNutrientsChange(carbsDiff, proteinsDiff, fatsDiff)
-      return amount
-    })
-  }
+        setShouldDecrease(true)
+        const amount = numericValue
+        const nutrientsNew = NutrientsCounter(amount, unit, product)
+        const proteinsDiff = proteins - nutrientsNew.proteins
+        const carbsDiff = carbs - nutrientsNew.carbs
+        const fatsDiff = fats - nutrientsNew.fats
+        updateNutrients(nutrientsNew)
+        onNutrientsChange(carbsDiff, proteinsDiff, fatsDiff)
+        return amount
+      })
+    },
+    [onNutrientsChange, proteins, carbs, fats, unit, product, shouldDecrease, updateNutrients]
+  )
 
   return (
     <View style={styles.Product}>

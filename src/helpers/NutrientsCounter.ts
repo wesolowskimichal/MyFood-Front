@@ -1,10 +1,13 @@
-import { JournalMeal, Nutrients, ProductDetails } from '../types/Types'
+import { JournalMeal, Nutrients, ProductDetails, Unit } from '../types/Types'
 
-export const NutrientsCounter = (amount: number, product: ProductDetails): Nutrients => {
+export const NutrientsCounter = (amount: number, unit: Unit, product: ProductDetails): Nutrients => {
+  const amountBig = product.unit === 'kg' || product.unit === 'l' ? product.amount : product.amount / 1000
+  const amountSmall = product.unit === 'kg' || product.unit === 'l' ? product.amount * 1000 : product.amount
+  const proportion = unit === 'kg' || unit == 'l' ? amount / amountBig : amount / amountSmall
   return {
-    proteins: amount * (product.protein / product.amount),
-    fats: amount * (product.fat / product.amount),
-    carbs: amount * (product.carbons / product.amount)
+    proteins: product.fat * proportion,
+    fats: product.fat * proportion,
+    carbs: product.carbons * proportion
   }
 }
 
