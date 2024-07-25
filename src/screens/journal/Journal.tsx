@@ -1,6 +1,5 @@
 import { ActivityIndicator, Button, FlatList, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useGetJournalsByDateQuery } from '../../redux/api/slices/JournalApiSlice'
-import DateTimePicker from '@react-native-community/datetimepicker'
 import { JournalMeal, JournalScreenProps, Nutrients, ThemeColors } from '../../types/Types'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSelector } from 'react-redux'
@@ -16,9 +15,11 @@ import { NutrientsCounterMap } from '../../helpers/NutrientsCounter'
 const Journal = ({ navigation, route }: JournalScreenProps) => {
   const [date, setDate] = useState<Date>(new Date())
   const [journalMeals, setJournalMeals] = useState<JournalMeal[]>([])
+
   const [proteins, setProteins] = useState(0)
   const [fats, setFats] = useState(0)
   const [carbs, setCarbs] = useState(0)
+
   const colors = useSelector((state: RootState) => state.theme.colors)
   const styles = useMemo(() => createStyles(colors), [colors])
   const dispatch = useDispatch<AppDispatch>()
@@ -79,7 +80,11 @@ const Journal = ({ navigation, route }: JournalScreenProps) => {
     setFats(Math.floor(nutrients.fats))
   }, [])
 
-  const handleMealChange = useCallback(() => {}, [setJournalMeals])
+  const handleOnNutrientsChange = useCallback((carbsDiff: number, proteinsDiff: number, fatsDiff: number) => {
+    setProteins(prev => Math.floor(prev - proteinsDiff))
+    setFats(prev => Math.floor(prev - fatsDiff))
+    setCarbs(prev => Math.floor(prev - carbsDiff))
+  }, [])
 
   if (journalEntriesLoading || mealsLoading) return <ActivityIndicator size={'large'} />
   if (journalEntriesError) return <Text>Fetching Journal Entries Error</Text>
@@ -90,7 +95,7 @@ const Journal = ({ navigation, route }: JournalScreenProps) => {
       <ScrollView style={styles.Wrapper} nestedScrollEnabled>
         <Button onPress={() => dispatch(toggleTheme())} title="Toggle Theme" />
         {journalMeals.map(journalMeal => (
-          <Meal key={journalMeal.meal.id} journalMeal={journalMeal} />
+          <Meal key={journalMeal.meal.id} journalMeal={journalMeal} onNutrientsChange={handleOnNutrientsChange} />
         ))}
       </ScrollView>
       <NutrientsBar proteins={proteins} fats={fats} carbs={carbs} />

@@ -7,7 +7,7 @@ type ProgressBarProps = {
   current: number
   frontColor?: ColorValue
   backColor?: ColorValue
-  overFlowColor?: ColorValue
+  overFlowColor?: ColorValue | ColorValue[]
   width?: DimensionValue
   height?: DimensionValue
   borderRadius?: AnimatableNumericValue
@@ -19,28 +19,50 @@ const ProgressBar = ({
   current,
   frontColor = '#000',
   backColor = '#fff',
-  overFlowColor = '#f00',
+  overFlowColor = ['#000', '#f00', '#8B0000'],
   width = '100%',
   height = 20,
   borderRadius = 0
 }: ProgressBarProps) => {
-  console.log('progress bar rerender')
   const [color, setColor] = useState<ColorValue>(frontColor)
+  const [colorB, setColorB] = useState<ColorValue>(backColor)
   const [animatedWidth, _setAnimatedWidth] = useState(new Animated.Value(0))
 
-  useEffect(() => {
+  const calculateColors = (current: number) => {
     let width = Math.floor(((current - start) / (end - start)) * 100)
     if (current > end) {
-      setColor(overFlowColor)
-      width = Math.floor(((current - start - end) / (end - start)) * 100)
+      if (Array.isArray(overFlowColor)) {
+        const state = Math.floor(width / 100) - 1
+        setColor(overFlowColor[state >= overFlowColor.length ? overFlowColor.length - 1 : state])
+
+        if (state > 0 && overFlowColor.length >= 2) {
+          setColorB(overFlowColor[state >= overFlowColor.length ? overFlowColor.length - 2 : state - 1])
+        } else {
+          setColorB(frontColor)
+        }
+      } else {
+        setColor(overFlowColor)
+        setColorB(backColor)
+      }
+      width %= 100
+    } else {
+      setColor(frontColor)
+      setColorB(backColor)
     }
-    console.log(width)
 
     Animated.timing(animatedWidth, {
       toValue: width,
       duration: 500,
       useNativeDriver: false
     }).start()
+  }
+
+  useEffect(() => {
+    calculateColors(current)
+  }, [frontColor, backColor])
+
+  useEffect(() => {
+    calculateColors(current)
   }, [current])
 
   const frontWidth = animatedWidth.interpolate({
@@ -48,7 +70,7 @@ const ProgressBar = ({
     outputRange: ['0%', '100%']
   })
   return (
-    <View style={{ backgroundColor: backColor, width: width, height: height, borderRadius: borderRadius }}>
+    <View style={{ backgroundColor: colorB, width: width, height: height, borderRadius: borderRadius }}>
       <Animated.View
         style={{ backgroundColor: color, width: frontWidth, height: '100%', borderRadius: borderRadius }}
       ></Animated.View>

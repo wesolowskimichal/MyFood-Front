@@ -11,9 +11,10 @@ import { CountKcal } from '../../helpers/CountKcal'
 
 type MealProps = {
   journalMeal: JournalMeal
+  onNutrientsChange: (carbsDiff: number, proteinsDiff: number, fatsDiff: number) => void
 }
 
-const Meal = ({ journalMeal }: MealProps) => {
+const Meal = ({ journalMeal, onNutrientsChange }: MealProps) => {
   console.log(`meal: ${journalMeal.meal.name} rerender`)
   const colors = useSelector((state: RootState) => state.theme.colors)
   const styles = useMemo(() => createStyles(colors), [colors])
@@ -35,9 +36,10 @@ const Meal = ({ journalMeal }: MealProps) => {
   }, [])
 
   const handleOnNutrientsChange = useCallback((carbsDiff: number, proteinsDiff: number, fatsDiff: number) => {
-    setProteins(prev => prev - proteinsDiff)
-    setFats(prev => prev - fatsDiff)
-    setCarbs(prev => prev - carbsDiff)
+    setProteins(prev => Math.floor(prev - proteinsDiff))
+    setFats(prev => Math.floor(prev - fatsDiff))
+    setCarbs(prev => Math.floor(prev - carbsDiff))
+    onNutrientsChange(carbsDiff, proteinsDiff, fatsDiff)
   }, [])
 
   return (
