@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, memo } from 'react'
+import { useState, useEffect, useMemo, useCallback, memo, useRef } from 'react'
 import { View, Text, StyleSheet, TextInput, Pressable } from 'react-native'
 import { ProductDetails, Unit, ThemeColors, Nutrients } from '../../types/Types'
 import { UnitAmountConverter } from '../../helpers/UnitAmountConverter'
@@ -12,13 +12,15 @@ type ProductProps = {
   product: ProductDetails
   defaultAmount: number
   onNutrientsChange: (carbsDiff: number, proteinsDiff: number, fatsDiff: number) => void
+  destructor: (product: ProductDetails, amount: number, unit: Unit) => void
 }
 
-const Product = ({ product, defaultAmount, onNutrientsChange }: ProductProps) => {
+const Product = ({ product, defaultAmount, onNutrientsChange, destructor }: ProductProps) => {
   console.log(`product: ${product.name} rerender`)
 
   const [unit, setUnit] = useState<Unit>(product.unit)
   const [amount, setAmount] = useState<number>(defaultAmount)
+  const amountRef = useRef(amount)
   const [shouldDecrease, setShouldDecrease] = useState(true)
 
   const [proteins, setProteins] = useState(0)
@@ -34,6 +36,17 @@ const Product = ({ product, defaultAmount, onNutrientsChange }: ProductProps) =>
     }
     return ['ml', 'l']
   }, [product.unit])
+
+  useEffect(() => {
+    return () => {
+      destructor(product, amountRef.current, unit)
+      console.log(`destructing product with amount: ${amountRef.current}`)
+    }
+  }, [])
+
+  useEffect(() => {
+    amountRef.current = amount
+  }, [amount])
 
   useEffect(() => {
     const convertedData = UnitAmountConverter(defaultAmount, product.unit)

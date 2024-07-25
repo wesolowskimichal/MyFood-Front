@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
-import { JournalMeal, Nutrients, ThemeColors } from '../../types/Types'
+import { JournalMeal, Nutrients, ProductDetails, ThemeColors, Unit } from '../../types/Types'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/Store'
@@ -8,6 +8,7 @@ import Icon from 'react-native-vector-icons/Ionicons'
 import Product from '../product/Product'
 import { NutrientsCounterMap } from '../../helpers/NutrientsCounter'
 import { CountKcal } from '../../helpers/CountKcal'
+import { UnitAmountConverter, UnitProductConverter } from '../../helpers/UnitAmountConverter'
 
 type MealProps = {
   journalMeal: JournalMeal
@@ -24,6 +25,8 @@ const Meal = ({ journalMeal, onNutrientsChange }: MealProps) => {
   const [carbs, setCarbs] = useState(0)
   const kcal = useMemo(() => CountKcal({ proteins: proteins, fats: fats, carbs: carbs }), [fats, carbs, proteins])
 
+  const [amounts, setAmounts] = useState<{ [id: string]: number }>({})
+
   const updateNutrients = useCallback((nutrients: Nutrients) => {
     setProteins(Math.floor(nutrients.proteins))
     setCarbs(Math.floor(nutrients.carbs))
@@ -32,7 +35,14 @@ const Meal = ({ journalMeal, onNutrientsChange }: MealProps) => {
 
   useEffect(() => {
     const nutrients = NutrientsCounterMap(journalMeal)
+    const amounts = journalMeal.elements.reduce((acc, curr) => ({ ...acc, [curr.obj.id]: curr.amount }), {})
+    setAmounts(amounts)
     updateNutrients(nutrients)
+  }, [])
+
+  const productDestructor = useCallback((product: ProductDetails, amount: number, unit: Unit) => {
+    const newAmount = UnitProductConverter(amount, unit, product)
+    setAmounts(prev => ({ ...prev, [product.id]: newAmount }))
   }, [])
 
   const handleOnNutrientsChange = useCallback((carbsDiff: number, proteinsDiff: number, fatsDiff: number) => {
@@ -96,8 +106,9 @@ const Meal = ({ journalMeal, onNutrientsChange }: MealProps) => {
             <Product
               key={element.obj.id}
               product={element.obj}
-              defaultAmount={element.amount}
+              defaultAmount={amounts[element.obj.id]}
               onNutrientsChange={handleOnNutrientsChange}
+              destructor={productDestructor}
             />
           ))}
         </View>

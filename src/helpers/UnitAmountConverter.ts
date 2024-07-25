@@ -1,4 +1,4 @@
-import { Unit } from '../types/Types'
+import { ProductDetails, Unit } from '../types/Types'
 
 export const UnitAmountConverter = (amount: number, unit: Unit): { amount: number; unit: Unit } => {
   let newAmount = amount
@@ -20,4 +20,12 @@ export const UnitAmountConverter = (amount: number, unit: Unit): { amount: numbe
     newUnit = 'ml'
   }
   return { amount: newAmount, unit: newUnit }
+}
+
+export const UnitProductConverter = (amount: number, unit: Unit, product: ProductDetails) => {
+  if (product.unit === unit) {
+    return amount
+  }
+  // todo: implement for different units of same type, throw error if different
+  return 0
 }
