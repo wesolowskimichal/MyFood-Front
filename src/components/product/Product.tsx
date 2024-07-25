@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, memo } from 'react'
 import { View, Text, StyleSheet, TextInput, Pressable } from 'react-native'
 import { ProductDetails, Unit, ThemeColors, Nutrients } from '../../types/Types'
 import { UnitAmountConverter } from '../../helpers/UnitAmountConverter'
@@ -15,6 +15,8 @@ type ProductProps = {
 }
 
 const Product = ({ product, defaultAmount, onNutrientsChange }: ProductProps) => {
+  console.log(`product: ${product.name} rerender`)
+
   const [unit, setUnit] = useState<Unit>(product.unit)
   const [amount, setAmount] = useState<number>(defaultAmount)
   const [shouldDecrease, setShouldDecrease] = useState(true)
@@ -38,6 +40,7 @@ const Product = ({ product, defaultAmount, onNutrientsChange }: ProductProps) =>
     setUnit(convertedData.unit)
     setAmount(convertedData.amount)
     const nutrients = NutrientsCounter(convertedData.amount, convertedData.unit, product)
+
     updateNutrients(nutrients)
   }, [defaultAmount, product])
 
@@ -195,4 +198,4 @@ const createStyles = (colors: ThemeColors) =>
     }
   })
 
-export default Product
+export default memo(Product)

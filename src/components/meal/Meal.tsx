@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
-import { Meal as IMeal, JournalMeal, Nutrients, ThemeColors } from '../../types/Types'
+import { JournalMeal, Nutrients, ThemeColors } from '../../types/Types'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/Store'
@@ -14,6 +14,7 @@ type MealProps = {
 }
 
 const Meal = ({ journalMeal }: MealProps) => {
+  console.log(`meal: ${journalMeal.meal.name} rerender`)
   const colors = useSelector((state: RootState) => state.theme.colors)
   const styles = useMemo(() => createStyles(colors), [colors])
 
@@ -33,17 +34,11 @@ const Meal = ({ journalMeal }: MealProps) => {
     updateNutrients(nutrients)
   }, [])
 
-  const handleOnNutrientsChange = useCallback(
-    (carbsDiff: number, proteinsDiff: number, fatsDiff: number) => {
-      const nutrients = {
-        proteins: proteins - proteinsDiff,
-        fats: fats - fatsDiff,
-        carbs: carbs - carbsDiff
-      }
-      updateNutrients(nutrients)
-    },
-    [proteins, fats, carbs]
-  )
+  const handleOnNutrientsChange = useCallback((carbsDiff: number, proteinsDiff: number, fatsDiff: number) => {
+    setProteins(prev => prev - proteinsDiff)
+    setFats(prev => prev - fatsDiff)
+    setCarbs(prev => prev - carbsDiff)
+  }, [])
 
   return (
     <Collapsible collapsibleStyle={styles.Meal}>
