@@ -104,6 +104,7 @@ export type MealPage = Page<Meal>
 // could be added lastly logged in username in prop to Login
 export type RootStackParamList = {
   Login: { infoText?: string; lastUsername?: string }
+  ProductInfo: { product: ProductDetails }
   Register: undefined
   Journal: undefined
   Test: undefined
@@ -114,6 +115,7 @@ export type RootStackParamList = {
 export type LoginScreenProps = NativeStackScreenProps<RootStackParamList, 'Login'>
 export type RegisterScreenProps = NativeStackScreenProps<RootStackParamList, 'Register'>
 export type JournalScreenProps = NativeStackScreenProps<RootStackParamList, 'Journal'>
+export type ProductInfoScreenProps = NativeStackScreenProps<RootStackParamList, 'ProductInfo'>
 export type FridgeScreenProps = NativeStackScreenProps<RootStackParamList, 'Fridge'>
 export type TestScreenProps = NativeStackScreenProps<ParamListBase, 'Test'>
 

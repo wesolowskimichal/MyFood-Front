@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
-import { JournalMeal, Nutrients, ProductDetails, ThemeColors, Unit } from '../../types/Types'
+import { JournalMeal, Nutrients, ProductDetails, RootStackParamList, ThemeColors, Unit } from '../../types/Types'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/Store'
@@ -9,13 +9,15 @@ import Product from '../product/Product'
 import { NutrientsCounterMap } from '../../helpers/NutrientsCounter'
 import { CountKcal } from '../../helpers/CountKcal'
 import { UnitAmountConverter, UnitProductConverter } from '../../helpers/UnitAmountConverter'
+import { NavigationProp } from '@react-navigation/native'
 
 type MealProps = {
+  navigation: NavigationProp<RootStackParamList>
   journalMeal: JournalMeal
   onNutrientsChange: (carbsDiff: number, proteinsDiff: number, fatsDiff: number) => void
 }
 
-const Meal = ({ journalMeal, onNutrientsChange }: MealProps) => {
+const Meal = ({ navigation, journalMeal, onNutrientsChange }: MealProps) => {
   console.log(`meal: ${journalMeal.meal.name} rerender`)
   const colors = useSelector((state: RootState) => state.theme.colors)
   const styles = useMemo(() => createStyles(colors), [colors])
@@ -105,6 +107,7 @@ const Meal = ({ journalMeal, onNutrientsChange }: MealProps) => {
           {journalMeal.elements.map(element => (
             <Product
               key={element.obj.id}
+              navigation={navigation}
               product={element.obj}
               defaultAmount={amounts[element.obj.id]}
               onNutrientsChange={handleOnNutrientsChange}

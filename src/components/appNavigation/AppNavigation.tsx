@@ -12,6 +12,7 @@ import ScreenWrapper from '../screenWrapper/ScreenWrapper'
 import Register from '../../screens/auth/Register'
 import { RootStackParamList } from '../../types/Types'
 import BottomTabNavigator from '../bottomTabNavigator/BottomTabNavigator'
+import ProductInfo from '../../screens/productInfo/ProductInfo'
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
 
@@ -47,13 +48,25 @@ const AppNavigation = () => {
     <NavigationContainer>
       <Stack.Navigator>
         {authState.isAuthenticated ? (
-          <Stack.Screen
-            name="Main"
-            component={BottomTabNavigator}
-            options={{
-              headerShown: false
-            }}
-          />
+          <>
+            <Stack.Screen
+              name="Main"
+              component={BottomTabNavigator}
+              options={{
+                headerShown: false
+              }}
+            />
+            <Stack.Screen
+              name="ProductInfo"
+              component={ProductInfo}
+              options={{
+                headerShown: true,
+                presentation: 'modal',
+                animationTypeForReplace: 'push',
+                animation: 'slide_from_right'
+              }}
+            />
+          </>
         ) : (
           <>
             <Stack.Screen

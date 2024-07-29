@@ -26,6 +26,24 @@ export const UnitProductConverter = (amount: number, unit: Unit, product: Produc
   if (product.unit === unit) {
     return amount
   }
-  // todo: implement for different units of same type, throw error if different
-  return 0
+
+  let convertedAmount = 0
+
+  if ((unit === 'g' && product.unit === 'kg') || (unit === 'kg' && product.unit === 'g')) {
+    if (unit === 'g') {
+      convertedAmount = amount / 1000
+    } else {
+      convertedAmount = amount * 1000
+    }
+  } else if ((unit === 'ml' && product.unit === 'l') || (unit === 'l' && product.unit === 'ml')) {
+    if (unit === 'ml') {
+      convertedAmount = amount / 1000
+    } else {
+      convertedAmount = amount * 1000
+    }
+  } else {
+    throw new Error('Incompatible units')
+  }
+
+  return convertedAmount
 }

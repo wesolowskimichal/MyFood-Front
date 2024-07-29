@@ -95,7 +95,12 @@ const Journal = ({ navigation, route }: JournalScreenProps) => {
       <ScrollView style={styles.Wrapper} nestedScrollEnabled>
         <Button onPress={() => dispatch(toggleTheme())} title="Toggle Theme" />
         {journalMeals.map(journalMeal => (
-          <Meal key={journalMeal.meal.id} journalMeal={journalMeal} onNutrientsChange={handleOnNutrientsChange} />
+          <Meal
+            key={journalMeal.meal.id}
+            journalMeal={journalMeal}
+            onNutrientsChange={handleOnNutrientsChange}
+            navigation={navigation}
+          />
         ))}
       </ScrollView>
       <NutrientsBar proteins={proteins} fats={fats} carbs={carbs} />

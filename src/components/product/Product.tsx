@@ -1,21 +1,24 @@
 import { useState, useEffect, useMemo, useCallback, memo, useRef } from 'react'
 import { View, Text, StyleSheet, TextInput, Pressable } from 'react-native'
-import { ProductDetails, Unit, ThemeColors, Nutrients } from '../../types/Types'
+import { ProductDetails, Unit, ThemeColors, Nutrients, RootStackParamList } from '../../types/Types'
 import { UnitAmountConverter } from '../../helpers/UnitAmountConverter'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/Store'
 import Dialog, { DialogContent, DialogTrigger } from '../dialog/Dialog'
+import Icon from 'react-native-vector-icons/Feather'
 import { NutrientsCounter } from '../../helpers/NutrientsCounter'
 import { CountKcal } from '../../helpers/CountKcal'
+import { NavigationProp } from '@react-navigation/native'
 
 type ProductProps = {
+  navigation: NavigationProp<RootStackParamList>
   product: ProductDetails
   defaultAmount: number
   onNutrientsChange: (carbsDiff: number, proteinsDiff: number, fatsDiff: number) => void
   destructor: (product: ProductDetails, amount: number, unit: Unit) => void
 }
 
-const Product = ({ product, defaultAmount, onNutrientsChange, destructor }: ProductProps) => {
+const Product = ({ navigation, product, defaultAmount, onNutrientsChange, destructor }: ProductProps) => {
   console.log(`product: ${product.name} rerender`)
 
   const [unit, setUnit] = useState<Unit>(product.unit)
@@ -63,6 +66,10 @@ const Product = ({ product, defaultAmount, onNutrientsChange, destructor }: Prod
     setFats(Math.floor(nutrients.fats))
   }, [])
 
+  const handleOnProductInfoClick = useCallback(() => {
+    navigation.navigate('ProductInfo', { product: product })
+  }, [])
+
   const handleAmountChange = useCallback(
     (text: string) => {
       const numericValue = parseFloat(text)
@@ -97,6 +104,9 @@ const Product = ({ product, defaultAmount, onNutrientsChange, destructor }: Prod
 
   return (
     <View style={styles.Product}>
+      <Pressable onPress={handleOnProductInfoClick}>
+        <Icon name="info" size={14} color={colors.accent} />
+      </Pressable>
       <View style={styles.Row}>
         <Text style={styles.ProductName}>{product.name}</Text>
         <TextInput
