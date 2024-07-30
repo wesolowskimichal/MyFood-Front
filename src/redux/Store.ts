@@ -5,6 +5,7 @@ import themeReducer from './slices/ThemeSlice'
 import { fridgeApiSlice } from './api/slices/FridgeApiSlice'
 import { journalApiSlice } from './api/slices/JournalApiSlice'
 import { userMealApiSlice } from './api/slices/UserMealSlice'
+import { productApiSlice } from './api/slices/ProductApiSlice'
 
 export const store = configureStore({
   reducer: {
@@ -12,10 +13,16 @@ export const store = configureStore({
     theme: themeReducer,
     [fridgeApiSlice.reducerPath]: fridgeApiSlice.reducer,
     [journalApiSlice.reducerPath]: journalApiSlice.reducer,
-    [userMealApiSlice.reducerPath]: userMealApiSlice.reducer
+    [userMealApiSlice.reducerPath]: userMealApiSlice.reducer,
+    [productApiSlice.reducerPath]: productApiSlice.reducer
   },
   middleware: getDefaultMiddleware =>
-    getDefaultMiddleware().concat(fridgeApiSlice.middleware, journalApiSlice.middleware, userMealApiSlice.middleware)
+    getDefaultMiddleware().concat(
+      fridgeApiSlice.middleware,
+      journalApiSlice.middleware,
+      userMealApiSlice.middleware,
+      productApiSlice.middleware
+    )
 })
 
 setupListeners(store.dispatch)

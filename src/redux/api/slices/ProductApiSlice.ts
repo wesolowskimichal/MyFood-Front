@@ -5,7 +5,7 @@ import { ProductDetails } from '../../../types/Types'
 export const productApiSlice = createApi({
   reducerPath: 'productApi',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['Product'],
+  tagTypes: ['Product', 'Journal'],
   endpoints: builder => ({
     getProduct: builder.query<ProductDetails, ProductDetails['barcode']>({
       query: barcode => `api/product/${barcode}`,
@@ -17,7 +17,10 @@ export const productApiSlice = createApi({
         method: 'PUT',
         body: product
       }),
-      invalidatesTags: (result, error, { barcode }) => [{ type: 'Product', id: barcode }]
+      invalidatesTags: (result, error, { barcode }) => [
+        { type: 'Product', id: barcode },
+        { type: 'Journal', id: 'BY_DATE' }
+      ]
     }),
     patchProduct: builder.mutation<ProductDetails, Partial<ProductDetails> & Pick<ProductDetails, 'barcode'>>({
       query: product => ({
@@ -25,9 +28,23 @@ export const productApiSlice = createApi({
         method: 'PATCH',
         body: product
       }),
-      invalidatesTags: (result, error, { barcode }) => [{ type: 'Product', id: barcode }]
+      invalidatesTags: (result, error, { barcode }) => [
+        { type: 'Product', id: barcode },
+        { type: 'Journal', id: 'BY_DATE' }
+      ]
+    }),
+    deleteProduct: builder.mutation<void, Partial<ProductDetails> & Pick<ProductDetails, 'barcode'>>({
+      query: ({ barcode }) => ({
+        url: `api/product/${barcode}/`,
+        method: 'DELETE'
+      }),
+      invalidatesTags: (result, error, { barcode }) => [
+        { type: 'Product', id: barcode },
+        { type: 'Journal', id: 'BY_DATE' }
+      ]
     })
   })
 })
 
-export const { useGetProductQuery, useUpdateProductMutation, usePatchProductMutation } = productApiSlice
+export const { useGetProductQuery, useUpdateProductMutation, usePatchProductMutation, useDeleteProductMutation } =
+  productApiSlice
