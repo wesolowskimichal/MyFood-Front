@@ -69,7 +69,7 @@ export interface Fridge extends _ID_FIELD {
 }
 
 export interface Journal extends _ID_URL_FIELD {
-  date: Date
+  readonly date: Date
   object: {
     type: 'product' | 'recipe'
     meal: Meal
@@ -97,6 +97,7 @@ export type Nutrients = {
 export type JournalPage = Page<Journal>
 export type FridgePage = Page<Fridge>
 export type MealPage = Page<Meal>
+export type ProductPage = Page<ProductDetails>
 
 //#endregion
 
@@ -105,6 +106,7 @@ export type MealPage = Page<Meal>
 export type RootStackParamList = {
   Login: { infoText?: string; lastUsername?: string }
   ProductInfo: { product: ProductDetails }
+  AddProduct: undefined
   Register: undefined
   Journal: undefined
   Test: undefined
@@ -115,6 +117,7 @@ export type RootStackParamList = {
 export type LoginScreenProps = NativeStackScreenProps<RootStackParamList, 'Login'>
 export type RegisterScreenProps = NativeStackScreenProps<RootStackParamList, 'Register'>
 export type JournalScreenProps = NativeStackScreenProps<RootStackParamList, 'Journal'>
+export type AddProductScreenProps = NativeStackScreenProps<RootStackParamList, 'AddProduct'>
 export type ProductInfoScreenProps = NativeStackScreenProps<RootStackParamList, 'ProductInfo'>
 export type FridgeScreenProps = NativeStackScreenProps<RootStackParamList, 'Fridge'>
 export type TestScreenProps = NativeStackScreenProps<ParamListBase, 'Test'>

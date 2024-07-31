@@ -1,5 +1,5 @@
 import { createApi } from '@reduxjs/toolkit/query/react'
-import { baseQueryWithReauth } from '../querys/BaseQueryReauth'
+import { baseQueryWithReauth } from '../queries/BaseQueryReauth'
 import { MealPage } from '../../../types/Types'
 
 export const userMealApiSlice = createApi({

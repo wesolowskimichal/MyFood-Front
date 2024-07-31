@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react'
 import { Fridge, FridgePage } from '../../../types/Types'
-import { baseQueryWithReauth } from '../querys/BaseQueryReauth'
+import { baseQueryWithReauth } from '../queries/BaseQueryReauth'
 
 export const fridgeApiSlice = createApi({
   reducerPath: 'fridgeApi',
