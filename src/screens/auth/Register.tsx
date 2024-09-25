@@ -11,7 +11,6 @@ import {
   Text,
   StyleSheet,
   Pressable,
-  ActivityIndicator,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -22,6 +21,7 @@ import * as ImagePicker from 'expo-image-picker'
 import * as ImageManipulator from 'expo-image-manipulator'
 import { AxiosError } from 'axios'
 import { Link } from '@react-navigation/native'
+import Loader from '../../components/loader/Loader'
 
 const Register = ({ navigation, route: _route }: RegisterScreenProps) => {
   const dispatch = useDispatch()
@@ -117,11 +117,7 @@ const Register = ({ navigation, route: _route }: RegisterScreenProps) => {
   }
 
   if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
-      </View>
-    )
+    return <Loader />
   }
 
   return (

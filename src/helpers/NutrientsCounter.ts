@@ -8,10 +8,24 @@ import { JournalMeal, Nutrients, ProductDetails, Unit } from '../types/Types'
  * @param {ProductDetails} product - The details of the product including nutrient information.
  * @returns {Nutrients} - The calculated nutrients for the given amount of the product.
  */
-export const NutrientsCounter = (amount: number, unit: Unit, product: ProductDetails): Nutrients => {
+interface ProductType {
+  protein: number
+  fat: number
+  carbons: number
+  amount: number
+  unit: Unit
+}
+export const NutrientsCounter = (amount: number, unit: Unit, product: ProductType, floor = false): Nutrients => {
   const amountBig = product.unit === 'kg' || product.unit === 'l' ? product.amount : product.amount / 1000
   const amountSmall = product.unit === 'kg' || product.unit === 'l' ? product.amount * 1000 : product.amount
   const proportion = unit === 'kg' || unit == 'l' ? amount / amountBig : amount / amountSmall
+  if (floor) {
+    return {
+      proteins: Math.floor(product.protein * proportion),
+      fats: Math.floor(product.fat * proportion),
+      carbs: Math.floor(product.carbons * proportion)
+    }
+  }
 
   return {
     proteins: product.protein * proportion,

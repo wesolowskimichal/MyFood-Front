@@ -32,7 +32,7 @@ const ProductInfo = ({ navigation, route }: ProductInfoScreenProps) => {
     return tableVals.map(curr => ({
       amount: `${curr.amount} ${amountConv[curr.type]}`,
       unit: amountConv[curr.type],
-      nutrients: NutrientsCounter(curr.amount, amountConv[curr.type], product)
+      nutrients: NutrientsCounter(curr.amount, amountConv[curr.type], product, true)
     }))
   }, [route, product])
 
@@ -42,8 +42,7 @@ const ProductInfo = ({ navigation, route }: ProductInfoScreenProps) => {
       headerTintColor: colors.neutral.text as string,
       headerStyle: { backgroundColor: colors.neutral.border as string }
     })
-  }, [navigation, product.name])
-  console.log(createProductTable)
+  }, [navigation, product.name, colors])
 
   return (
     <ScreenWrapper>

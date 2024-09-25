@@ -10,6 +10,8 @@ import { NutrientsCounterMap } from '../../helpers/NutrientsCounter'
 import { CountKcal } from '../../helpers/CountKcal'
 import { UnitAmountConverter, UnitProductConverter } from '../../helpers/UnitAmountConverter'
 import { NavigationProp } from '@react-navigation/native'
+import { useDeleteJournalMutation, usePatchJournalMutation } from '../../redux/api/slices/JournalApiSlice'
+import debounce from 'lodash/debounce' // Import debounce from lodash
 
 type MealProps = {
   navigation: NavigationProp<RootStackParamList>
@@ -19,6 +21,10 @@ type MealProps = {
 
 const Meal = ({ navigation, journalMeal, onNutrientsChange }: MealProps) => {
   console.log(`meal: ${journalMeal.meal.name} rerender`)
+
+  const [patchJournal] = usePatchJournalMutation()
+  const [removeProductFromJournal, { isLoading: isRemovingProductFromJournal }] = useDeleteJournalMutation()
+
   const colors = useSelector((state: RootState) => state.theme.colors)
   const styles = useMemo(() => createStyles(colors), [colors])
 
@@ -40,18 +46,42 @@ const Meal = ({ navigation, journalMeal, onNutrientsChange }: MealProps) => {
     const amounts = journalMeal.elements.reduce((acc, curr) => ({ ...acc, [curr.obj.id]: curr.amount }), {})
     setAmounts(amounts)
     updateNutrients(nutrients)
-  }, [])
+  }, [journalMeal])
 
   const productDestructor = useCallback((product: ProductDetails, amount: number, unit: Unit) => {
     const newAmount = UnitProductConverter(amount, unit, product)
     setAmounts(prev => ({ ...prev, [product.id]: newAmount }))
   }, [])
 
-  const handleOnNutrientsChange = useCallback((carbsDiff: number, proteinsDiff: number, fatsDiff: number) => {
-    setProteins(prev => Math.floor(prev - proteinsDiff))
-    setFats(prev => Math.floor(prev - fatsDiff))
-    setCarbs(prev => Math.floor(prev - carbsDiff))
-    onNutrientsChange(carbsDiff, proteinsDiff, fatsDiff)
+  const debouncedPatchJournal = useCallback(
+    debounce((amount: number, object: ProductDetails) => {
+      if (!journalMeal.journalId) return
+      patchJournal({
+        body: { meal: journalMeal.meal, object_type: 'product', object_amount: amount, object, date: new Date() },
+        journalId: journalMeal.journalId
+      })
+    }, 1000),
+    [journalMeal.journalId, patchJournal]
+  )
+
+  const handleOnNutrientsChange = useCallback(
+    (carbsDiff: number, proteinsDiff: number, fatsDiff: number, amount: number, object: ProductDetails) => {
+      setProteins(prev => Math.floor(prev - proteinsDiff))
+      setFats(prev => Math.floor(prev - fatsDiff))
+      setCarbs(prev => Math.floor(prev - carbsDiff))
+      onNutrientsChange(carbsDiff, proteinsDiff, fatsDiff)
+      debouncedPatchJournal(amount, object)
+    },
+    [onNutrientsChange, debouncedPatchJournal]
+  )
+
+  const handleOnAddProductClick = useCallback(() => {
+    navigation.navigate('AddProductToJournal', { meal: journalMeal.meal })
+  }, [navigation, journalMeal])
+
+  const handleOnProductRemove = useCallback(async () => {
+    if (isRemovingProductFromJournal || !journalMeal.journalId) return
+    await removeProductFromJournal(journalMeal.journalId)
   }, [])
 
   return (
@@ -61,7 +91,7 @@ const Meal = ({ navigation, journalMeal, onNutrientsChange }: MealProps) => {
           <View style={styles.MealInfo}>
             <View style={styles.MealHeader}>
               <Text style={styles.MealName}>{journalMeal.meal.name}</Text>
-              <Pressable>
+              <Pressable onPress={handleOnAddProductClick}>
                 <Icon name="add-circle-outline" size={23} color={colors.accent} />
               </Pressable>
             </View>
@@ -104,13 +134,14 @@ const Meal = ({ navigation, journalMeal, onNutrientsChange }: MealProps) => {
       </CollapsibleHeader>
       <CollapsibleContent itemStyle={styles.CollapsibleContent}>
         <View style={styles.MealDetails}>
-          {journalMeal.elements.map(element => (
+          {journalMeal.elements.map((element, index) => (
             <Product
-              key={element.obj.id}
+              key={`${element.obj.id}-${index}`}
               navigation={navigation}
               product={element.obj}
               defaultAmount={amounts[element.obj.id]}
               onNutrientsChange={handleOnNutrientsChange}
+              onProductRemove={handleOnProductRemove}
               destructor={productDestructor}
             />
           ))}

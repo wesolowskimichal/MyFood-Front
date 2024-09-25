@@ -1,19 +1,22 @@
-import { ActivityIndicator, Button, FlatList, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Button, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useGetJournalsByDateQuery } from '../../redux/api/slices/JournalApiSlice'
 import { JournalMeal, JournalScreenProps, Nutrients, ThemeColors } from '../../types/Types'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSelector } from 'react-redux'
-import { AppDispatch, RootState } from '../../redux/Store'
-import { useDispatch } from 'react-redux'
-import { toggleTheme } from '../../redux/slices/ThemeSlice'
+import { RootState } from '../../redux/Store'
 import ScreenWrapper from '../../components/screenWrapper/ScreenWrapper'
 import { useGetMealsQuery } from '../../redux/api/slices/UserMealSlice'
 import Meal from '../../components/meal/Meal'
 import NutrientsBar from '../../components/nutrientsBar/NutrientsBar'
 import { NutrientsCounterMap } from '../../helpers/NutrientsCounter'
+import Loader from '../../components/loader/Loader'
+import { getDate } from '../../helpers/GetDate'
+import DateTimePicker from '@react-native-community/datetimepicker'
+import FeatherIcon from 'react-native-vector-icons/Feather'
 
 const Journal = ({ navigation, route }: JournalScreenProps) => {
   const [date, setDate] = useState<Date>(new Date())
+  const [showDatePicker, setShowDatePicker] = useState(false)
   const [journalMeals, setJournalMeals] = useState<JournalMeal[]>([])
 
   const [proteins, setProteins] = useState(0)
@@ -22,17 +25,12 @@ const Journal = ({ navigation, route }: JournalScreenProps) => {
 
   const colors = useSelector((state: RootState) => state.theme.colors)
   const styles = useMemo(() => createStyles(colors), [colors])
-  const dispatch = useDispatch<AppDispatch>()
 
   const {
     data: journalEntries,
     error: journalEntriesError,
     isLoading: journalEntriesLoading
-  } = useGetJournalsByDateQuery({
-    year: date.getFullYear(),
-    month: date.getMonth() + 1,
-    day: date.getDate()
-  })
+  } = useGetJournalsByDateQuery(getDate(date))
 
   const { data: meals, error: mealsError, isLoading: mealsLoading } = useGetMealsQuery()
 
@@ -57,7 +55,13 @@ const Journal = ({ navigation, route }: JournalScreenProps) => {
         }, journalMealsMap)
       }
 
-      const journalMeals = Array.from(journalMealsMap.values())
+      const journalMeals = Array.from(journalMealsMap.values()).map(journalMeal => {
+        return {
+          ...journalMeal,
+          journalId: journalEntries.find(entry => entry.object.meal.id === journalMeal.meal.id)?.id
+        }
+      })
+      console.log(journalMeals)
       setJournalMeals(journalMeals)
       const nutrients: Nutrients = journalMeals.reduce(
         (acc, curr) => {
@@ -86,17 +90,35 @@ const Journal = ({ navigation, route }: JournalScreenProps) => {
     setCarbs(prev => Math.floor(prev - carbsDiff))
   }, [])
 
-  if (journalEntriesLoading || mealsLoading) return <ActivityIndicator size={'large'} />
+  const onDateChange = useCallback((_event: any, selectedDate?: Date) => {
+    setShowDatePicker(false)
+    if (selectedDate) {
+      setDate(selectedDate)
+    }
+  }, [])
+
+  if (journalEntriesLoading || mealsLoading) return <Loader />
   if (journalEntriesError) return <Text>Fetching Journal Entries Error</Text>
   if (mealsError) return <Text>Fetching Meals Error</Text>
 
+  const dateStruct = getDate(date)
+
   return (
     <ScreenWrapper>
-      <ScrollView style={styles.Wrapper} nestedScrollEnabled>
-        <Button onPress={() => dispatch(toggleTheme())} title="Toggle Theme" />
-        {journalMeals.map(journalMeal => (
+      <ScrollView style={styles.wrapper} nestedScrollEnabled>
+        <View style={styles.dateWrapper}>
+          <Pressable onPress={() => setShowDatePicker(true)} style={styles.date}>
+            <Text style={{ color: colors.neutral.text, fontWeight: 500 }}>
+              {dateStruct.day.toString().padStart(2, '0')}/{dateStruct.month.toString().padStart(2, '0')}/
+              {dateStruct.year}
+            </Text>
+            <FeatherIcon name="calendar" size={24} color={colors.accent} />
+          </Pressable>
+        </View>
+        {showDatePicker && <DateTimePicker value={date} mode="date" display="default" onChange={onDateChange} />}
+        {journalMeals.map((journalMeal, index) => (
           <Meal
-            key={journalMeal.meal.id}
+            key={`${journalMeal.meal.id}-${index}`}
             journalMeal={journalMeal}
             onNutrientsChange={handleOnNutrientsChange}
             navigation={navigation}
@@ -110,9 +132,25 @@ const Journal = ({ navigation, route }: JournalScreenProps) => {
 
 const createStyles = (colors: ThemeColors) =>
   StyleSheet.create({
-    Wrapper: {
+    wrapper: {
       flex: 1,
       backgroundColor: colors.primary
+    },
+    dateWrapper: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      backgroundColor: colors.neutral.surface
+    },
+    date: {
+      paddingVertical: 8,
+      paddingHorizontal: 24,
+      flexBasis: 'auto',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      borderWidth: 1,
+      borderColor: colors.neutral.text,
+      borderRadius: 8
     }
   })
 

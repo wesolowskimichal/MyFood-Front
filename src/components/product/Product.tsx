@@ -1,26 +1,40 @@
 import { useState, useEffect, useMemo, useCallback, memo, useRef } from 'react'
 import { View, Text, StyleSheet, TextInput, Pressable } from 'react-native'
 import { ProductDetails, Unit, ThemeColors, Nutrients, RootStackParamList } from '../../types/Types'
-import { UnitAmountConverter } from '../../helpers/UnitAmountConverter'
+import { UnitAmountConverter, UnitProductConverter } from '../../helpers/UnitAmountConverter'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/Store'
-import Dialog, { DialogContent, DialogTrigger } from '../dialog/Dialog'
 import Icon from 'react-native-vector-icons/Feather'
+import EntypoIcon from 'react-native-vector-icons/Entypo'
 import { NutrientsCounter } from '../../helpers/NutrientsCounter'
 import { CountKcal } from '../../helpers/CountKcal'
 import { NavigationProp } from '@react-navigation/native'
+import UnitSelector from '../unitSelector/Unitselector'
+import Dialog, { DialogContent, DialogTrigger } from '../dialog/Dialog'
 
 type ProductProps = {
   navigation: NavigationProp<RootStackParamList>
   product: ProductDetails
   defaultAmount: number
-  onNutrientsChange: (carbsDiff: number, proteinsDiff: number, fatsDiff: number) => void
+  onNutrientsChange: (
+    carbsDiff: number,
+    proteinsDiff: number,
+    fatsDiff: number,
+    amount: number,
+    object: ProductDetails
+  ) => void
+  onProductRemove: (product: ProductDetails) => void
   destructor: (product: ProductDetails, amount: number, unit: Unit) => void
 }
 
-const Product = ({ navigation, product, defaultAmount, onNutrientsChange, destructor }: ProductProps) => {
-  console.log(`product: ${product.name} rerender`)
-
+const Product = ({
+  navigation,
+  product,
+  defaultAmount,
+  onNutrientsChange,
+  onProductRemove,
+  destructor
+}: ProductProps) => {
   const [unit, setUnit] = useState<Unit>(product.unit)
   const [amount, setAmount] = useState<number>(defaultAmount)
   const amountRef = useRef(amount)
@@ -43,7 +57,6 @@ const Product = ({ navigation, product, defaultAmount, onNutrientsChange, destru
   useEffect(() => {
     return () => {
       destructor(product, amountRef.current, unit)
-      console.log(`destructing product with amount: ${amountRef.current}`)
     }
   }, [])
 
@@ -70,6 +83,10 @@ const Product = ({ navigation, product, defaultAmount, onNutrientsChange, destru
     navigation.navigate('ProductInfo', { product: product })
   }, [])
 
+  const handleOnProductRemove = useCallback(async () => {
+    onProductRemove(product)
+  }, [onProductRemove])
+
   const handleAmountChange = useCallback(
     (text: string) => {
       const numericValue = parseFloat(text)
@@ -82,7 +99,9 @@ const Product = ({ navigation, product, defaultAmount, onNutrientsChange, destru
             onNutrientsChange(
               Math.floor(nutrientsNew.carbs),
               Math.floor(nutrientsNew.proteins),
-              Math.floor(nutrientsNew.fats)
+              Math.floor(nutrientsNew.fats),
+              0,
+              product
             )
             setShouldDecrease(false)
           }
@@ -95,39 +114,67 @@ const Product = ({ navigation, product, defaultAmount, onNutrientsChange, destru
         const carbsDiff = carbs - nutrientsNew.carbs
         const fatsDiff = fats - nutrientsNew.fats
         updateNutrients(nutrientsNew)
-        onNutrientsChange(carbsDiff, proteinsDiff, fatsDiff)
+        onNutrientsChange(carbsDiff, proteinsDiff, fatsDiff, UnitProductConverter(amount, unit, product), product)
         return amount
       })
     },
     [onNutrientsChange, proteins, carbs, fats, unit, product, shouldDecrease, updateNutrients]
   )
 
+  const handleUnitChange = useCallback(
+    (newUnit: Unit) => {
+      setUnit(newUnit)
+
+      const nutrientsNew = NutrientsCounter(amount, newUnit, product)
+      const proteinsDiff = proteins - nutrientsNew.proteins
+      const carbsDiff = carbs - nutrientsNew.carbs
+      const fatsDiff = fats - nutrientsNew.fats
+
+      updateNutrients(nutrientsNew)
+      onNutrientsChange(carbsDiff, proteinsDiff, fatsDiff, UnitProductConverter(amount, newUnit, product), product)
+    },
+    [amount, proteins, carbs, fats, product, onNutrientsChange, updateNutrients]
+  )
+
   return (
     <View style={styles.Product}>
-      <Pressable onPress={handleOnProductInfoClick}>
-        <Icon name="info" size={14} color={colors.accent} />
-      </Pressable>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Pressable onPress={handleOnProductInfoClick}>
+          <Icon name="info" size={14} color={colors.accent} />
+        </Pressable>
+        <Dialog>
+          <DialogTrigger style={styles.DialogTrigger}>
+            <EntypoIcon name="cross" size={14} color={colors.complementary.danger} />
+          </DialogTrigger>
+          <DialogContent style={styles.DialogContent}>
+            <Text style={styles.DialogContentText}>Are you sure you want to remove this item from Journal?</Text>
+            <View style={styles.DialogContentButtonsWrapper}>
+              <Pressable
+                onPress={handleOnProductRemove}
+                style={[
+                  styles.DialogContentButton,
+                  { backgroundColor: '#CD5C5C', flexDirection: 'row', justifyContent: 'center', gap: 5 }
+                ]}
+              >
+                <Text style={{ color: colors.primary }}>Yes</Text>
+                <Icon name="trash-2" size={14} color={colors.primary} />
+              </Pressable>
+              <Pressable style={styles.DialogContentButton}>
+                <Text>No</Text>
+              </Pressable>
+            </View>
+          </DialogContent>
+        </Dialog>
+      </View>
       <View style={styles.Row}>
         <Text style={styles.ProductName}>{product.name}</Text>
         <TextInput
           style={styles.AmountInput}
-          value={amount.toString()}
+          value={amount?.toString() ?? 0}
           keyboardType="numeric"
           onChangeText={handleAmountChange}
         />
-        <Dialog style={styles.DialogContainer}>
-          <DialogTrigger style={styles.DialogTrigger}>
-            <Text style={styles.UnitText}>{unit}</Text>
-          </DialogTrigger>
-          <DialogContent style={styles.DialogContent}>
-            {avaibleUnits.map((avaibleUnit, index) => (
-              <Pressable key={`${avaibleUnit}-${index}`} style={styles.DialogContentButton}>
-                <Text>{avaibleUnit}</Text>
-              </Pressable>
-            ))}
-            <Pressable></Pressable>
-          </DialogContent>
-        </Dialog>
+        <UnitSelector unit={unit} avaibleUnits={avaibleUnits} setUnit={handleUnitChange} />
       </View>
       <View style={styles.Row}>
         <Text style={styles.NutrientValue}>{kcal}</Text>
@@ -163,31 +210,6 @@ const createStyles = (colors: ThemeColors) =>
       marginVertical: 4,
       gap: 20
     },
-    DialogContainer: {
-      justifyContent: 'flex-end'
-    },
-    DialogTrigger: {
-      borderColor: colors.neutral.text,
-      borderWidth: 1,
-      borderRadius: 4,
-      width: 60,
-      height: 40,
-      textAlign: 'center',
-      color: colors.neutral.text,
-      alignItems: 'center',
-      justifyContent: 'center'
-    },
-    UnitText: {
-      color: colors.neutral.text,
-      textAlign: 'center'
-    },
-    DialogContent: {
-      width: 250,
-      height: 250
-    },
-    DialogContentButton: {
-      backgroundColor: 'red'
-    },
     ProductName: {
       color: colors.neutral.text,
       fontWeight: '500',
@@ -218,6 +240,36 @@ const createStyles = (colors: ThemeColors) =>
     },
     ModalViewTop: {
       backgroundColor: 'black'
+    },
+    DialogTrigger: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      borderWidth: 1,
+      borderColor: colors.complementary.danger,
+      borderRadius: 888
+    },
+    DialogContent: {
+      flexDirection: 'column',
+      gap: 24
+    },
+    DialogContentText: {
+      color: colors.neutral.text,
+      fontSize: 16,
+      textAlign: 'center',
+      fontWeight: '600'
+    },
+    DialogContentButtonsWrapper: {
+      flexDirection: 'row',
+      justifyContent: 'space-around'
+    },
+    DialogContentButton: {
+      borderWidth: 1,
+      borderColor: colors.neutral.border,
+      borderRadius: 4,
+      padding: 10,
+      width: 100,
+      justifyContent: 'center',
+      alignItems: 'center'
     }
   })
 

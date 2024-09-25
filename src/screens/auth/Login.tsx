@@ -3,10 +3,11 @@ import { useDispatch, useSelector } from 'react-redux'
 import { api } from '../../services/Api'
 import { LoginScreenProps, ThemeColors, Token__FULL } from '../../types/Types'
 import { setAuth } from '../../redux/slices/AuthSlice'
-import { Button, TextInput, View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native'
+import { Button, TextInput, View, Text, StyleSheet } from 'react-native'
 import { RootState } from '../../redux/Store'
 import { Link } from '@react-navigation/native'
 import { AxiosError } from 'axios'
+import Loader from '../../components/loader/Loader'
 
 const Login = ({ navigation: _navigation, route }: LoginScreenProps) => {
   const infoText = route?.params?.infoText ?? null
@@ -52,11 +53,7 @@ const Login = ({ navigation: _navigation, route }: LoginScreenProps) => {
   }, [lastUsername])
 
   if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
-      </View>
-    )
+    return <Loader />
   }
 
   return (

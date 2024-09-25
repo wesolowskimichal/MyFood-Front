@@ -7,21 +7,45 @@ export const productApiSlice = createApi({
   baseQuery: baseQueryWithReauth,
   tagTypes: ['Product', 'Journal'],
   endpoints: builder => ({
-    getProducts: builder.query<ProductPage, { page: number }>({
-      query: ({ page }) => ({
-        url: `api/products?page=${page}`,
-        method: 'GET'
-      }),
-      providesTags: (result, error, { page }) =>
+    getProducts: builder.query<ProductPage, { page: number; filters?: Record<string, any> }>({
+      query: ({ page, filters }) => {
+        const queryParams = new URLSearchParams({ page: page.toString() })
+
+        if (filters) {
+          Object.entries(filters).forEach(([key, value]) => {
+            if (value !== undefined && value !== null) {
+              queryParams.append(key, value.toString())
+            }
+          })
+        }
+
+        return {
+          url: `api/products?${queryParams.toString()}`,
+          method: 'GET'
+        }
+      },
+      providesTags: (result, _error, { page }) =>
         result
           ? [
-              ...result.results.map(({ barcode }) => ({ type: 'Product' as const, id: barcode })),
+              ...result.results.flatMap(({ barcode, name }) => {
+                const tags = []
+                if (barcode) {
+                  tags.push({ type: 'Product' as const, id: `BARCODE-${barcode}` })
+                }
+                if (name) {
+                  tags.push({ type: 'Product' as const, id: `NAME-${name}` })
+                }
+                return tags
+              }),
               { type: 'Product' as const, id: 'PARTIAL_LIST' },
               { type: 'Product' as const, id: `PAGE-${page}` }
             ]
           : [{ type: 'Product' as const, id: 'PARTIAL_LIST' }]
     }),
-    addProduct: builder.mutation<ProductDetails, Omit<ProductDetails, 'added_by' | 'url' | 'id'>>({
+    addProduct: builder.mutation<
+      ProductDetails,
+      (Omit<ProductDetails, 'added_by' | 'url' | 'id' | 'picture'> & { picture?: File }) | FormData
+    >({
       query: product => ({
         url: 'api/products/',
         method: 'POST',
@@ -85,5 +109,6 @@ export const {
   usePatchProductMutation,
   useDeleteProductMutation,
   useAddProductMutation,
-  useGetProductsQuery
+  useGetProductsQuery,
+  useLazyGetProductsQuery
 } = productApiSlice

@@ -27,16 +27,15 @@ const BottomTabNavigator = () => {
             iconName = focused ? 'cube' : 'cube-outline'
             return <MaterialIcon name="fridge" size={size} color={color} />
           } else {
-            iconName = 'alert-circle-outline' // default or fallback icon
+            iconName = 'alert-circle-outline'
           }
 
           return <Icon name={iconName} size={size} color={color} />
         },
-        tabBarActiveTintColor: colors.accent as string, // Active tab color
-        tabBarInactiveTintColor: colors.neutral.text as string, // Inactive tab color
-        tabBarStyle: styles.tabBar, // Custom tab bar style
-        tabBarLabelStyle: styles.tabBarLabel // Custom label style,
-        
+        tabBarActiveTintColor: colors.accent as string,
+        tabBarInactiveTintColor: colors.neutral.text as string,
+        tabBarStyle: styles.tabBar,
+        tabBarLabelStyle: styles.tabBarLabel
       })}
     >
       <Tab.Screen
@@ -44,7 +43,7 @@ const BottomTabNavigator = () => {
         component={Journal}
         options={{
           headerShown: false,
-          tabBarLabel: 'Journal',
+          tabBarLabel: 'Journal'
         }}
       />
       <Tab.Screen

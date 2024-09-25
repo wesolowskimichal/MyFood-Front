@@ -80,6 +80,7 @@ export interface Journal extends _ID_URL_FIELD {
 }
 
 export interface JournalMeal {
+  journalId?: string
   meal: Meal
   elements: {
     // obj: ProductDetails | Recipe
@@ -106,7 +107,9 @@ export type ProductPage = Page<ProductDetails>
 export type RootStackParamList = {
   Login: { infoText?: string; lastUsername?: string }
   ProductInfo: { product: ProductDetails }
-  AddProduct: undefined
+  AddProductToJournal: { product?: ProductDetails; meal: Meal }
+  ProductNotFound: { barcode: ProductBase['barcode']; meal: Meal }
+  AddProduct: { barcode?: string; meal?: Meal }
   Register: undefined
   Journal: undefined
   Test: undefined
@@ -118,6 +121,8 @@ export type LoginScreenProps = NativeStackScreenProps<RootStackParamList, 'Login
 export type RegisterScreenProps = NativeStackScreenProps<RootStackParamList, 'Register'>
 export type JournalScreenProps = NativeStackScreenProps<RootStackParamList, 'Journal'>
 export type AddProductScreenProps = NativeStackScreenProps<RootStackParamList, 'AddProduct'>
+export type ProductNotFoundScreenProps = NativeStackScreenProps<RootStackParamList, 'ProductNotFound'>
+export type AddProductToJournalScreenProps = NativeStackScreenProps<RootStackParamList, 'AddProductToJournal'>
 export type ProductInfoScreenProps = NativeStackScreenProps<RootStackParamList, 'ProductInfo'>
 export type FridgeScreenProps = NativeStackScreenProps<RootStackParamList, 'Fridge'>
 export type TestScreenProps = NativeStackScreenProps<ParamListBase, 'Test'>

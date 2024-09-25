@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
-import { ActivityIndicator, StyleSheet, View } from 'react-native'
+import { StyleSheet } from 'react-native'
 import { loadTokens } from '../../redux/slices/AuthSlice'
 import Login from '../../screens/auth/Login'
 import { useAppSelector } from '../../hooks/useAppDispatch'
@@ -13,6 +13,10 @@ import Register from '../../screens/auth/Register'
 import { RootStackParamList } from '../../types/Types'
 import BottomTabNavigator from '../bottomTabNavigator/BottomTabNavigator'
 import ProductInfo from '../../screens/productInfo/ProductInfo'
+import Loader from '../loader/Loader'
+import AddProductToJournal from '../../screens/addProductToJournal/AddProductToJournal'
+import ProductNotFound from '../../screens/productNotFound/ProductNotFound'
+import AddProduct from '../../screens/addProduct/AddProduct'
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
 
@@ -37,11 +41,7 @@ const AppNavigation = () => {
   }, [dispatch])
 
   if (authState.isAuthenticated === null) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
-      </View>
-    )
+    return <Loader />
   }
 
   return (
@@ -57,6 +57,27 @@ const AppNavigation = () => {
               }}
             />
             <Stack.Screen
+              name="AddProductToJournal"
+              component={AddProductToJournal}
+              options={{
+                headerShown: false,
+                presentation: 'modal',
+                animationTypeForReplace: 'push',
+                animation: 'slide_from_right'
+              }}
+            />
+            <Stack.Screen
+              name="AddProduct"
+              component={AddProduct}
+              options={{
+                headerShown: true,
+                presentation: 'modal',
+                animationTypeForReplace: 'push',
+                animation: 'slide_from_right',
+                title: 'Add Product'
+              }}
+            />
+            <Stack.Screen
               name="ProductInfo"
               component={ProductInfo}
               options={{
@@ -64,6 +85,17 @@ const AppNavigation = () => {
                 presentation: 'modal',
                 animationTypeForReplace: 'push',
                 animation: 'slide_from_right'
+              }}
+            />
+            <Stack.Screen
+              name="ProductNotFound"
+              component={ProductNotFound}
+              options={{
+                headerShown: true,
+                presentation: 'modal',
+                animationTypeForReplace: 'push',
+                animation: 'slide_from_right',
+                title: 'Product not found'
               }}
             />
           </>

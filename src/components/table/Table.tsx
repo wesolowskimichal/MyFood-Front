@@ -13,11 +13,11 @@ type Data = {
 type TableProps<T> = {
   data: T[]
   style?: StyleProp<ViewStyle>
+  showKcal?: boolean
 }
 
-const transformData = (data: Data[]) => {
+const transformData = (data: Data[], nutrients: string[] = ['proteins', 'fats', 'carbs']) => {
   const headers = data.map(item => item.amount)
-  const nutrients = ['proteins', 'fats', 'carbs']
 
   const rows = nutrients.map(nutrient => ({
     nutrient,
@@ -27,8 +27,9 @@ const transformData = (data: Data[]) => {
   return { headers, rows }
 }
 
-const Table = <T,>({ data, style }: TableProps<T>) => {
-  const { headers, rows } = transformData(data as unknown as Data[])
+const Table = <T,>({ data, style, showKcal = false }: TableProps<T>) => {
+  const nutrients = showKcal ? ['kcal', 'proteins', 'fats', 'carbs'] : ['proteins', 'fats', 'carbs']
+  const { headers, rows } = transformData(data as unknown as Data[], nutrients)
   const colors = useSelector((state: RootState) => state.theme.colors)
   const styles = useMemo(() => createStyles(colors), [colors])
 
@@ -47,7 +48,7 @@ const Table = <T,>({ data, style }: TableProps<T>) => {
           <Text style={styles.infoCell}>{row.nutrient.charAt(0).toUpperCase() + row.nutrient.slice(1)}</Text>
           {row.values.map((value, index) => (
             <Text style={styles.cell} key={index}>
-              {value}
+              {isNaN(value) ? '-' : value}
             </Text>
           ))}
         </View>
