@@ -2,8 +2,8 @@ import { Button, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nat
 import { useGetJournalsByDateQuery } from '../../redux/api/slices/JournalApiSlice'
 import { JournalMeal, JournalScreenProps, Nutrients, ThemeColors } from '../../types/Types'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useSelector } from 'react-redux'
-import { RootState } from '../../redux/Store'
+import { useDispatch, useSelector } from 'react-redux'
+import { AppDispatch, RootState } from '../../redux/Store'
 import ScreenWrapper from '../../components/screenWrapper/ScreenWrapper'
 import { useGetMealsQuery } from '../../redux/api/slices/UserMealSlice'
 import Meal from '../../components/meal/Meal'
@@ -13,8 +13,12 @@ import Loader from '../../components/loader/Loader'
 import { getDate } from '../../helpers/GetDate'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import FeatherIcon from 'react-native-vector-icons/Feather'
+import { toggleTheme } from '../../redux/slices/ThemeSlice'
 
 const Journal = ({ navigation, route }: JournalScreenProps) => {
+  // for theme tests only
+  const dispatch = useDispatch<AppDispatch>()
+
   const [date, setDate] = useState<Date>(new Date())
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [journalMeals, setJournalMeals] = useState<JournalMeal[]>([])
@@ -105,6 +109,8 @@ const Journal = ({ navigation, route }: JournalScreenProps) => {
 
   return (
     <ScreenWrapper>
+      {/* // for theme tests only */}
+      <Button onPress={() => dispatch(toggleTheme())} title="Toggle Theme" />
       <ScrollView style={styles.wrapper} nestedScrollEnabled>
         <View style={styles.dateWrapper}>
           <Pressable onPress={() => setShowDatePicker(true)} style={styles.date}>
@@ -149,7 +155,7 @@ const createStyles = (colors: ThemeColors) =>
       alignItems: 'center',
       gap: 8,
       borderWidth: 1,
-      borderColor: colors.neutral.text,
+      borderColor: colors.neutral.border,
       borderRadius: 8
     }
   })

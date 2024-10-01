@@ -60,7 +60,7 @@ const _FridgeProductTile = ({
   }
 
   return (
-    <Animated.View style={[imageStyle, { width: '100%' }]}>
+    <Animated.View style={[imageStyle, { width: '100%', alignItems: 'center' }]}>
       <Image source={{ uri: picture }} style={styles.productImage} />
       <Text style={styles.productName}>{name}</Text>
       <View style={styles.amountWrapper}>

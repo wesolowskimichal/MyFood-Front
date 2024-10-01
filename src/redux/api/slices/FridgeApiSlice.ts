@@ -85,11 +85,29 @@ export const fridgeApiSlice = createApi({
         }
       }
     }),
-    deleteFridge: builder.mutation<{ success: boolean }, string>({
+    removeFridgeProduct: builder.mutation<{ success: boolean }, string>({
       query: id => ({
         url: `api/fridge/${id}/`,
         method: 'DELETE'
-      })
+      }),
+      onQueryStarted: async (id, { dispatch, queryFulfilled }) => {
+        try {
+          await queryFulfilled
+
+          dispatch(
+            fridgeApiSlice.util.updateQueryData('getFridges', { page: 1 }, draft => {
+              const fridgeIndex = draft.results.findIndex(f => f.id === id)
+              if (fridgeIndex !== -1) {
+                draft.results.splice(fridgeIndex, 1)
+              } else {
+                console.log('not found fridge product:', id)
+              }
+            })
+          )
+        } catch (error) {
+          console.error('Failed to remove fridge product:', error)
+        }
+      }
     })
   })
 })
@@ -100,5 +118,5 @@ export const {
   useGetFridgeByIdQuery,
   useCreateFridgeMutation,
   usePatchFridgeProductMutation,
-  useDeleteFridgeMutation
+  useRemoveFridgeProductMutation
 } = fridgeApiSlice

@@ -1,15 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { FlatList, StyleSheet, Text, View, TextInput, Pressable, Dimensions } from 'react-native'
-import { Fridge as IFridge, FridgeScreenProps, ThemeColors } from '../../types/Types'
+import { Fridge as IFridge, FridgeScreenProps, ThemeColors, Unit } from '../../types/Types'
 import { useLazyGetFridgesQuery } from '../../redux/api/slices/FridgeApiSlice'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/Store'
 import ListItemSkeleton from '../../components/listItemSkeleton/ListItemSkeleton'
 import FridgeProduct from '../../components/fridgeProduct/FridgeProduct'
-import { debounce } from 'lodash'
+import { debounce, set } from 'lodash'
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated'
 import ScreenWrapper from '../../components/screenWrapper/ScreenWrapper'
 import Icon from 'react-native-vector-icons/Feather'
+import Loader from '../../components/loader/Loader'
 
 const Fridge = ({ navigation, route }: FridgeScreenProps) => {
   const [getFridgeProducts, { isLoading: isFridgeLoading }] = useLazyGetFridgesQuery()
@@ -23,12 +24,16 @@ const Fridge = ({ navigation, route }: FridgeScreenProps) => {
     'product-name': undefined
   })
   const [fridgeProducts, setFridgeProducts] = useState<IFridge[]>([])
-  const [isFinished, setIsFinished] = useState(false)
+  const [isFinished, setIsFinished] = useState(true)
   const [page, setPage] = useState(1)
   const [viewType, setViewType] = useState<'tile' | 'list'>('tile')
 
   useEffect(() => {
     getFridgeProducts({ page: 1 })
+  }, [])
+
+  const handleRemoveProduct = useCallback((id: string) => {
+    setFridgeProducts(prevProducts => prevProducts.filter(product => product.id !== id))
   }, [])
 
   const fetchFridgeProducts = useCallback(
@@ -55,7 +60,13 @@ const Fridge = ({ navigation, route }: FridgeScreenProps) => {
   }, [isFridgeLoading, isFinished])
 
   const renderItem = ({ item }: { item: IFridge }) => (
-    <FridgeProduct fridgeProduct={item} type={viewType} style={styles.productItem} />
+    <FridgeProduct
+      fridgeProduct={item}
+      type={viewType}
+      style={styles.productItem}
+      onAmountChange={handleAmountChange}
+      onProductRemove={handleRemoveProduct}
+    />
   )
 
   useEffect(() => {
@@ -66,7 +77,6 @@ const Fridge = ({ navigation, route }: FridgeScreenProps) => {
     }
   }, [fetchFridgeProducts])
 
-  // Custom animated switch
   const switchPosition = useSharedValue(0)
 
   const handleSwitchToggle = useCallback(() => {
@@ -74,9 +84,19 @@ const Fridge = ({ navigation, route }: FridgeScreenProps) => {
     switchPosition.value = withSpring(viewType === 'tile' ? 24 : 0, { damping: 20 })
   }, [viewType, switchPosition])
 
+  const handleAmountChange = useCallback((id: string, newAmount: number) => {
+    setFridgeProducts(prevProducts =>
+      prevProducts.map(fridge => (fridge.id === id ? { ...fridge, current_amount: newAmount } : fridge))
+    )
+  }, [])
+
   const switchStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: switchPosition.value }]
   }))
+
+  if (isFridgeLoading && page === 1) {
+    return <Loader />
+  }
 
   return (
     <ScreenWrapper>
@@ -96,9 +116,9 @@ const Fridge = ({ navigation, route }: FridgeScreenProps) => {
           <Icon name="list" size={20} color={viewType === 'list' ? colors.accent : colors.neutral.border} />
         </Pressable>
       </View>
-
+      {!(isFridgeLoading && page === 1) && fridgeProducts.length === 0 && <Text>No products in fridge</Text>}
       <FlatList
-        key={viewType} // Force re-render when viewType changes
+        key={viewType}
         data={fridgeProducts}
         numColumns={viewType === 'tile' ? 2 : 1}
         style={{ paddingHorizontal: 5 }}
@@ -118,7 +138,8 @@ const createStyles = (colors: ThemeColors) =>
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      marginBottom: 10
+      marginBottom: 10,
+      paddingHorizontal: 5
     },
     input: {
       flex: 1,
@@ -145,7 +166,7 @@ const createStyles = (colors: ThemeColors) =>
       width: 24,
       height: 24,
       borderRadius: 12,
-      backgroundColor: colors.primary
+      backgroundColor: colors.accent
     },
     productItem: {
       flex: 1,

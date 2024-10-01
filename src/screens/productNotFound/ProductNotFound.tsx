@@ -15,7 +15,7 @@ const ProductNotFound = ({ navigation, route }: ProductNotFoundScreenProps) => {
   const { barcode, meal } = route.params
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState(barcode)
-  const [isFinished, setIsFinished] = useState(false)
+  const [isFinished, setIsFinished] = useState(true)
   const [searchType, setSearchType] = useState<'by_name' | 'by_barcode'>('by_barcode')
   const [accumulatedProducts, setAccumulatedProducts] = useState<ProductDetails[]>([])
 
