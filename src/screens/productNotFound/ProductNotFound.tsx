@@ -63,19 +63,19 @@ const ProductNotFound = ({ navigation, route }: ProductNotFoundScreenProps) => {
     }
   }, [fetchWithType])
 
-  const handleSearchInput = (text: string) => {
+  const handleSearchInput = useCallback((text: string) => {
     const type = determineSearchType(text)
     setSearchType(type)
     setSearch(text)
     setPage(1)
     setAccumulatedProducts([])
-  }
+  }, [])
 
-  const handleLoadMoreProducts = () => {
+  const handleLoadMoreProducts = useCallback(() => {
     if (!isLoading && !isFinished) {
       setPage(prevPage => prevPage + 1)
     }
-  }
+  }, [isLoading, isFinished])
 
   const renderItem = ({ item }: { item: ProductDetails }) => (
     <ProductInfoBar product={item} navigation={navigation} meal={meal} />

@@ -1,4 +1,4 @@
-import { ProductDetails, Unit } from '../types/Types'
+import { ProductBase, ProductDetails, Unit } from '../types/Types'
 
 export const UnitAmountConverter = (amount: number, unit: Unit): { amount: number; unit: Unit } => {
   let newAmount = amount
@@ -22,7 +22,7 @@ export const UnitAmountConverter = (amount: number, unit: Unit): { amount: numbe
   return { amount: newAmount, unit: newUnit }
 }
 
-export const UnitProductConverter = (amount: number, unit: Unit, product: ProductDetails) => {
+export const UnitProductConverter = (amount: number, unit: Unit, product: ProductDetails | ProductBase) => {
   if (product.unit === unit) {
     return amount
   }
