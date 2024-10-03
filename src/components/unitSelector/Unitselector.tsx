@@ -1,9 +1,9 @@
 import { DimensionValue, Pressable, StyleSheet, Text } from 'react-native'
-import Dialog, { DialogContent, DialogTrigger } from '../dialog/Dialog'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/Store'
 import { useMemo } from 'react'
 import { ThemeColors, Unit } from '../../types/Types'
+import EmbeddedDialog, { DialogContent, DialogTrigger } from '../embeddedDialog/EmbeddedDialog'
 
 type UnitSelectorProps = {
   unit: Unit
@@ -19,7 +19,7 @@ const UnitSelector = ({ unit, avaibleUnits, setUnit, width }: UnitSelectorProps)
   const _avaibleUnits: Unit[] = avaibleUnits === '__all__' ? ['g', 'kg', 'ml', 'l'] : avaibleUnits
 
   return (
-    <Dialog style={styles.DialogContainer}>
+    <EmbeddedDialog style={styles.DialogContainer}>
       <DialogTrigger style={styles.DialogTrigger}>
         <Text style={styles.UnitText}>{unit}</Text>
       </DialogTrigger>
@@ -38,7 +38,7 @@ const UnitSelector = ({ unit, avaibleUnits, setUnit, width }: UnitSelectorProps)
         ))}
         <Pressable></Pressable>
       </DialogContent>
-    </Dialog>
+    </EmbeddedDialog>
   )
 }
 
@@ -48,7 +48,7 @@ const createStyles = (colors: ThemeColors, width?: DimensionValue) =>
       justifyContent: 'flex-end'
     },
     DialogTrigger: {
-      borderColor: colors.neutral.text,
+      borderColor: colors.neutral.border,
       borderWidth: 1,
       borderRadius: 4,
       width: width ?? 60,

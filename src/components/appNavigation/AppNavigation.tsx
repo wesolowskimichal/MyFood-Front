@@ -14,9 +14,9 @@ import { RootStackParamList } from '../../types/Types'
 import BottomTabNavigator from '../bottomTabNavigator/BottomTabNavigator'
 import ProductInfo from '../../screens/productInfo/ProductInfo'
 import Loader from '../loader/Loader'
-import AddProductToJournal from '../../screens/addProductToJournal/AddProductToJournal'
 import ProductNotFound from '../../screens/productNotFound/ProductNotFound'
 import AddProduct from '../../screens/addProduct/AddProduct'
+import AddProductToComponent from '../../screens/AddProductToComponent/AddProductToComponent'
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
 
@@ -57,8 +57,8 @@ const AppNavigation = () => {
               }}
             />
             <Stack.Screen
-              name="AddProductToJournal"
-              component={AddProductToJournal}
+              name="AddProductToComponent"
+              component={AddProductToComponent}
               options={{
                 headerShown: false,
                 presentation: 'modal',

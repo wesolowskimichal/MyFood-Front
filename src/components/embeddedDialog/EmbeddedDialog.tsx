@@ -2,10 +2,8 @@ import { Children, cloneElement, isValidElement, ReactElement, ReactNode, useSta
 import { Modal, Pressable, StyleProp, StyleSheet, View, ViewStyle } from 'react-native'
 
 type DialogProps = {
-  children: ReactElement[] | ReactElement
+  children: [ReactElement<typeof DialogTrigger>, ReactElement<typeof DialogContent>]
   style?: StyleProp<ViewStyle>
-  visible: boolean
-  setVisible: (visible: boolean) => void
 }
 type DialogComponentProps = {
   children?: ReactNode
@@ -15,7 +13,9 @@ type DialogComponentProps = {
 export const DialogTrigger = ({ children, style }: DialogComponentProps) => <View style={style}>{children}</View>
 export const DialogContent = ({ children, style }: DialogComponentProps) => <View style={style}>{children}</View>
 
-const Dialog = ({ children, style, visible, setVisible }: DialogProps) => {
+const EmbeddedDialog = ({ children, style }: DialogProps) => {
+  const [visible, setVisible] = useState(false)
+
   let trigger: ReactNode | null = null
   let content: ReactNode | null = null
 
@@ -24,16 +24,17 @@ const Dialog = ({ children, style, visible, setVisible }: DialogProps) => {
       trigger = child
     } else if (isValidElement(child) && child.type === DialogContent) {
       content = child
+    } else {
+      throw new Error('Dialog children must be of type DialogTrigger and DialogContent')
     }
   })
 
   return (
     <View style={style}>
-      {trigger && <Pressable onPress={() => setVisible(true)}>{trigger}</Pressable>}
+      <Pressable onPress={() => setVisible(true)}>{trigger}</Pressable>
       <Modal visible={visible} animationType="fade" transparent onRequestClose={() => setVisible(false)}>
         <Pressable style={styles.DialogOut} onPress={() => setVisible(false)}>
-          {content && <View style={styles.DialogContainer}>{content}</View>}
-          {!trigger && !content && children}
+          <View style={styles.DialogContainer}>{content}</View>
         </Pressable>
       </Modal>
     </View>
@@ -57,4 +58,4 @@ const styles = StyleSheet.create({
   }
 })
 
-export default Dialog
+export default EmbeddedDialog

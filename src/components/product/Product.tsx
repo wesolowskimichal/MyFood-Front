@@ -37,8 +37,9 @@ const Product = ({
 }: ProductProps) => {
   const [unit, setUnit] = useState<Unit>(product.unit)
   const [amount, setAmount] = useState<number>(defaultAmount)
-  const amountRef = useRef(amount)
   const [shouldDecrease, setShouldDecrease] = useState(true)
+  const [isRemoveProductDialogVisible, setIsRemoveProductDialogVisible] = useState(false)
+  const amountRef = useRef(amount)
 
   const [proteins, setProteins] = useState(0)
   const [fats, setFats] = useState(0)
@@ -142,7 +143,7 @@ const Product = ({
         <Pressable onPress={handleOnProductInfoClick}>
           <Icon name="info" size={14} color={colors.accent} />
         </Pressable>
-        <Dialog>
+        <Dialog visible={isRemoveProductDialogVisible} setVisible={setIsRemoveProductDialogVisible}>
           <DialogTrigger style={styles.DialogTrigger}>
             <EntypoIcon name="cross" size={14} color={colors.complementary.danger} />
           </DialogTrigger>
@@ -159,7 +160,7 @@ const Product = ({
                 <Text style={{ color: colors.primary }}>Yes</Text>
                 <Icon name="trash-2" size={14} color={colors.primary} />
               </Pressable>
-              <Pressable style={styles.DialogContentButton}>
+              <Pressable style={styles.DialogContentButton} onPress={() => setIsRemoveProductDialogVisible(false)}>
                 <Text>No</Text>
               </Pressable>
             </View>

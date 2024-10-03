@@ -8,10 +8,10 @@ import Icon from 'react-native-vector-icons/Ionicons'
 import Product from '../product/Product'
 import { NutrientsCounterMap } from '../../helpers/NutrientsCounter'
 import { CountKcal } from '../../helpers/CountKcal'
-import { UnitAmountConverter, UnitProductConverter } from '../../helpers/UnitAmountConverter'
+import { UnitProductConverter } from '../../helpers/UnitAmountConverter'
 import { NavigationProp } from '@react-navigation/native'
 import { useDeleteJournalMutation, usePatchJournalMutation } from '../../redux/api/slices/JournalApiSlice'
-import debounce from 'lodash/debounce' // Import debounce from lodash
+import debounce from 'lodash/debounce'
 
 type MealProps = {
   navigation: NavigationProp<RootStackParamList>
@@ -76,7 +76,7 @@ const Meal = ({ navigation, journalMeal, onNutrientsChange }: MealProps) => {
   )
 
   const handleOnAddProductClick = useCallback(() => {
-    navigation.navigate('AddProductToJournal', { meal: journalMeal.meal })
+    navigation.navigate('AddProductToComponent', { meal: journalMeal.meal })
   }, [navigation, journalMeal])
 
   const handleOnProductRemove = useCallback(async () => {

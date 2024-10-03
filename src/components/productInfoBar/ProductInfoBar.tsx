@@ -10,14 +10,15 @@ type ProductInfoBarProps = {
   navigation: NavigationProp<any>
   product: ProductDetails
   meal?: Meal
+  fridge?: boolean
 }
 
-const ProductInfoBar = ({ navigation, product, meal }: ProductInfoBarProps) => {
+const ProductInfoBar = ({ navigation, product, meal, fridge }: ProductInfoBarProps) => {
   const colors = useSelector((state: RootState) => state.theme.colors)
   const styles = useMemo(() => createStyles(colors), [colors])
 
   const handleProductSelect = useCallback(() => {
-    navigation.navigate('AddProductToJournal', { product: product, meal: meal })
+    navigation.navigate('AddProductToComponent', { product: product, meal: meal, fridge: fridge })
   }, [])
 
   const handleOnProductInfoClick = useCallback(() => {
