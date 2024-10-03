@@ -26,8 +26,9 @@ const tableVals: { amount: number; type: AmountType }[] = [
 ]
 
 const AddProduct = ({ navigation, route }: AddProductScreenProps) => {
-  const navBarcode = route.params?.barcode ?? null
-  const navMeal = route.params?.meal
+  const navBarcode = route.params.barcode ?? null
+  const navMeal = route.params.meal
+  const navFridge = route.params.fridge
   const [addProduct, { isLoading: isAddingProduct }] = useAddProductMutation()
 
   const colors = useSelector((state: RootState) => state.theme.colors)
@@ -155,8 +156,8 @@ const AddProduct = ({ navigation, route }: AddProductScreenProps) => {
       }
 
       const result = await addProduct(formData).unwrap()
-      if (navMeal) {
-        navigation.navigate('AddProductToJournal', { product: result, meal: navMeal })
+      if (navMeal || navFridge) {
+        navigation.navigate('AddProductToComponent', { product: result, meal: navMeal, fridge: navFridge })
       } else {
         navigation.navigate('Journal')
       }

@@ -1,13 +1,13 @@
 import { useCallback, useMemo, useState } from 'react'
-import { ProductDetails, ThemeColors, Unit } from '../../../types/Types'
-import { NutrientsCounter } from '../../../helpers/NutrientsCounter'
-import { Button, Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
-import Table from '../../../components/table/Table'
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
+import { ProductDetails, ThemeColors, Unit } from '../types/Types'
 import { useSelector } from 'react-redux'
-import { RootState } from '../../../redux/Store'
-import UnitSelector from '../../../components/unitSelector/Unitselector'
+import { RootState } from '../redux/Store'
+import { NutrientsCounter } from '../helpers/NutrientsCounter'
+import { CountKcal } from '../helpers/CountKcal'
 import { Image } from 'expo-image'
-import { CountKcal } from '../../../helpers/CountKcal'
+import UnitSelector from '../components/unitSelector/Unitselector'
+import Table from '../components/table/Table'
 
 type AddProductFormProps = {
   product: ProductDetails
@@ -73,7 +73,7 @@ const AddProductForm = ({ product, onSubmit }: AddProductFormProps) => {
         <UnitSelector unit={unit} avaibleUnits={avaibleUnits} setUnit={(unit: Unit) => setUnit(unit)} />
       </View>
       <Pressable style={styles.submit} onPress={() => onSubmit(amount, unit)}>
-        <Text>Add To Journal</Text>
+        <Text>Add Product</Text>
       </Pressable>
       <Table data={createProductTable} showKcal />
     </View>

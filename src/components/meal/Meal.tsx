@@ -76,7 +76,7 @@ const Meal = ({ navigation, journalMeal, onNutrientsChange }: MealProps) => {
   )
 
   const handleOnAddProductClick = useCallback(() => {
-    navigation.navigate('AddProductToJournal', { meal: journalMeal.meal })
+    navigation.navigate('AddProductToComponent', { meal: journalMeal.meal })
   }, [navigation, journalMeal])
 
   const handleOnProductRemove = useCallback(async () => {

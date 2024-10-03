@@ -1,11 +1,16 @@
 import { createApi } from '@reduxjs/toolkit/query/react'
-import { Fridge, FridgePage } from '../../../types/Types'
+import { Fridge, FridgePage, ProductBase, ProductDetails } from '../../../types/Types'
 import { baseQueryWithReauth } from '../queries/BaseQueryReauth'
 
 type GetFridgeQueryParams = {
   'is-on-shopping-list'?: boolean
   'show-below-threshold'?: boolean
   'product-name'?: string
+}
+
+type PostFrigeBody = {
+  product: ProductDetails
+  current_amount: number
 }
 
 type UpdateFridgeBody = {
@@ -20,7 +25,10 @@ export const fridgeApiSlice = createApi({
   tagTypes: ['Fridge'],
   baseQuery: baseQueryWithReauth,
   endpoints: builder => ({
-    getFridges: builder.query<FridgePage, { page: number; filters?: Record<string, any> }>({
+    getFridges: builder.query<
+      { fridgeProducts: Fridge[]; isFinished: boolean },
+      { page: number; filters?: Record<string, any> }
+    >({
       query: ({ page, filters }) => {
         const queryParams = new URLSearchParams({ page: page.toString() })
 
@@ -37,29 +45,46 @@ export const fridgeApiSlice = createApi({
           method: 'GET'
         }
       },
-      providesTags: (result, _error, { page }) =>
+      transformResponse: (response: FridgePage) => ({ fridgeProducts: response.results, isFinished: !response.next }),
+
+      providesTags: result =>
         result
           ? [
-              ...result.results.flatMap(({ product }) => {
-                const tags = []
-                if (product) {
-                  tags.push({ type: 'Fridge' as const, id: product.id })
-                }
-                return tags
-              }),
-              { type: 'Fridge' as const, id: 'PARTIAL_LIST' }
+              ...result.fridgeProducts.map(({ product }) => ({
+                type: 'Fridge' as const,
+                id: product.id
+              })),
+              { type: 'Fridge', id: 'PARTIAL_LIST' }
             ]
-          : [{ type: 'Fridge' as const, id: 'PARTIAL_LIST' }]
+          : [{ type: 'Fridge', id: 'PARTIAL_LIST' }]
     }),
     getFridgeById: builder.query<Fridge, string>({
       query: id => `api/fridge/${id}/`
     }),
-    createFridge: builder.mutation<Fridge, Partial<Fridge>>({
-      query: newFridge => ({
+    addFridgeProduct: builder.mutation<Fridge, PostFrigeBody>({
+      query: ({ product, current_amount }) => ({
         url: 'api/fridge/',
         method: 'POST',
-        body: newFridge
-      })
+        body: {
+          product_barcode: product.barcode,
+          current_amount,
+          threshold: 0,
+          is_on_shopping_list: false
+        }
+      }),
+      invalidatesTags: [{ type: 'Fridge', id: 'PARTIAL_LIST' }],
+      onQueryStarted: async ({ product }, { dispatch, queryFulfilled }) => {
+        try {
+          const { data } = await queryFulfilled
+          dispatch(
+            fridgeApiSlice.util.updateQueryData('getFridges', { page: 1 }, draft => {
+              draft.fridgeProducts.push(data)
+            })
+          )
+        } catch (error) {
+          console.error('Failed to add fridge product:', error)
+        }
+      }
     }),
     patchFridgeProduct: builder.mutation<Fridge, { id: string; body: UpdateFridgeBody }>({
       query: ({ id, body }) => ({
@@ -73,10 +98,10 @@ export const fridgeApiSlice = createApi({
 
           dispatch(
             fridgeApiSlice.util.updateQueryData('getFridges', { page: 1 }, draft => {
-              const fridgeIndex = draft.results.findIndex(f => f.id === id)
+              const fridgeIndex = draft.fridgeProducts.findIndex(f => f.id === id)
               if (fridgeIndex !== -1) {
-                draft.results[fridgeIndex].current_amount = body.current_amount
-                console.log('found fridge product:', draft.results[fridgeIndex])
+                draft.fridgeProducts[fridgeIndex].current_amount = body.current_amount
+                console.log('found fridge product:', draft.fridgeProducts[fridgeIndex])
               }
             })
           )
@@ -91,23 +116,20 @@ export const fridgeApiSlice = createApi({
         method: 'DELETE'
       }),
       onQueryStarted: async (id, { dispatch, queryFulfilled }) => {
+        const patchResult = dispatch(
+          fridgeApiSlice.util.updateQueryData('getFridges', { page: 1 }, draft => {
+            const index = draft.fridgeProducts.findIndex(fridge => fridge.id === id)
+            if (index !== -1) draft.fridgeProducts.splice(index, 1)
+          })
+        )
         try {
           await queryFulfilled
-
-          dispatch(
-            fridgeApiSlice.util.updateQueryData('getFridges', { page: 1 }, draft => {
-              const fridgeIndex = draft.results.findIndex(f => f.id === id)
-              if (fridgeIndex !== -1) {
-                draft.results.splice(fridgeIndex, 1)
-              } else {
-                console.log('not found fridge product:', id)
-              }
-            })
-          )
         } catch (error) {
-          console.error('Failed to remove fridge product:', error)
+          patchResult.undo()
+          console.error('Failed to delete fridge product:', error)
         }
-      }
+      },
+      invalidatesTags: [{ type: 'Fridge', id: 'PARTIAL_LIST' }]
     })
   })
 })
@@ -116,7 +138,7 @@ export const {
   useGetFridgesQuery,
   useLazyGetFridgesQuery,
   useGetFridgeByIdQuery,
-  useCreateFridgeMutation,
+  useAddFridgeProductMutation,
   usePatchFridgeProductMutation,
   useRemoveFridgeProductMutation
 } = fridgeApiSlice

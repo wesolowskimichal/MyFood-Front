@@ -107,9 +107,9 @@ export type ProductPage = Page<ProductDetails>
 export type RootStackParamList = {
   Login: { infoText?: string; lastUsername?: string }
   ProductInfo: { product: ProductDetails }
-  AddProductToJournal: { product?: ProductDetails; meal: Meal }
-  ProductNotFound: { barcode: ProductBase['barcode']; meal: Meal }
-  AddProduct: { barcode?: string; meal?: Meal }
+  AddProductToComponent: { product?: ProductDetails; meal?: Meal; fridge?: boolean }
+  ProductNotFound: { barcode: ProductBase['barcode']; meal?: Meal; fridge?: boolean }
+  AddProduct: { barcode?: string; meal?: Meal; fridge?: boolean }
   Register: undefined
   Journal: undefined
   Test: undefined
@@ -122,7 +122,7 @@ export type RegisterScreenProps = NativeStackScreenProps<RootStackParamList, 'Re
 export type JournalScreenProps = NativeStackScreenProps<RootStackParamList, 'Journal'>
 export type AddProductScreenProps = NativeStackScreenProps<RootStackParamList, 'AddProduct'>
 export type ProductNotFoundScreenProps = NativeStackScreenProps<RootStackParamList, 'ProductNotFound'>
-export type AddProductToJournalScreenProps = NativeStackScreenProps<RootStackParamList, 'AddProductToJournal'>
+export type AddProductToComponentScreenProps = NativeStackScreenProps<RootStackParamList, 'AddProductToComponent'>
 export type ProductInfoScreenProps = NativeStackScreenProps<RootStackParamList, 'ProductInfo'>
 export type FridgeScreenProps = NativeStackScreenProps<RootStackParamList, 'Fridge'>
 export type TestScreenProps = NativeStackScreenProps<ParamListBase, 'Test'>

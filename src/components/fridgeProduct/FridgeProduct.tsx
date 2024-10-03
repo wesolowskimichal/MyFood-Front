@@ -16,17 +16,9 @@ type FridgeProductProps = {
   fridgeProduct: Fridge
   type?: 'tile' | 'list'
   style?: StyleProp<ViewStyle>
-  onAmountChange: (id: string, amount: number) => void
-  onProductRemove: (id: string) => void
 }
 
-const FridgeProduct = ({
-  fridgeProduct,
-  style,
-  type = 'tile',
-  onAmountChange,
-  onProductRemove
-}: FridgeProductProps) => {
+const FridgeProduct = ({ fridgeProduct, style, type = 'tile' }: FridgeProductProps) => {
   const colors = useSelector((state: RootState) => state.theme.colors)
   const styles = useMemo(() => createStyles(colors), [colors])
 
@@ -55,7 +47,6 @@ const FridgeProduct = ({
   const handleRemove = useCallback(async () => {
     try {
       await removeFridgeProduct(fridgeProduct.id)
-      onProductRemove(fridgeProduct.id)
       setIsRemoveProductDialogVisible(false)
     } catch (error) {
       console.error(error)
@@ -66,7 +57,6 @@ const FridgeProduct = ({
     debounce((amount: number, unit: Unit) => {
       if (amount === fridgeProduct.current_amount && unit === fridgeProduct.product.unit) return
       const _amount = UnitProductConverter(amount, unit, fridgeProduct.product)
-      onAmountChange(fridgeProduct.id, _amount)
       patchFridgeProduct({
         id: fridgeProduct.id,
         body: {
