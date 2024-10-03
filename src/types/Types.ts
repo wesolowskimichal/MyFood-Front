@@ -68,6 +68,17 @@ export interface Fridge extends _ID_FIELD {
   is_on_shopping_list: boolean
 }
 
+export interface Recipe extends _ID_URL_FIELD {
+  name: string
+  shared: boolean
+  added_by: User
+  time: string
+  difficulty: string
+  picture: string
+  likes: number
+  is_liked: boolean
+}
+
 export interface Journal extends _ID_URL_FIELD {
   readonly date: Date
   object: {
@@ -99,6 +110,7 @@ export type JournalPage = Page<Journal>
 export type FridgePage = Page<Fridge>
 export type MealPage = Page<Meal>
 export type ProductPage = Page<ProductDetails>
+export type RecipePage = Page<Recipe>
 
 //#endregion
 

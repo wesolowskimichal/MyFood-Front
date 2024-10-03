@@ -73,7 +73,7 @@ export const fridgeApiSlice = createApi({
         }
       }),
       invalidatesTags: [{ type: 'Fridge', id: 'PARTIAL_LIST' }],
-      onQueryStarted: async ({ product }, { dispatch, queryFulfilled }) => {
+      onQueryStarted: async (_fridgeBody, { dispatch, queryFulfilled }) => {
         try {
           const { data } = await queryFulfilled
           dispatch(
