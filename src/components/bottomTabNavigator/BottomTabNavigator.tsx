@@ -8,6 +8,7 @@ import { RootStackParamList, ThemeColors } from '../../types/Types'
 import Fridge from '../../screens/fridge/Fridge'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/Store'
+import Recipes from '../../screens/recipes/Recipes'
 
 const Tab = createBottomTabNavigator<RootStackParamList>()
 
@@ -16,6 +17,7 @@ const BottomTabNavigator = () => {
   const styles = useMemo(() => createStyles(colors), [colors])
   return (
     <Tab.Navigator
+      initialRouteName="Journal"
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: string
@@ -24,8 +26,9 @@ const BottomTabNavigator = () => {
             iconName = focused ? 'book' : 'book-outline'
             return <Icon name={iconName} size={size} color={color} />
           } else if (route.name === 'Fridge') {
-            iconName = focused ? 'cube' : 'cube-outline'
             return <MaterialIcon name="fridge" size={size} color={color} />
+          } else if (route.name === 'Recipes') {
+            return <MaterialIcon name="chef-hat" size={size} color={color} />
           } else {
             iconName = 'alert-circle-outline'
           }
@@ -39,6 +42,14 @@ const BottomTabNavigator = () => {
       })}
     >
       <Tab.Screen
+        name="Fridge"
+        component={Fridge}
+        options={{
+          headerShown: false,
+          tabBarLabel: 'Fridge'
+        }}
+      />
+      <Tab.Screen
         name="Journal"
         component={Journal}
         options={{
@@ -47,11 +58,11 @@ const BottomTabNavigator = () => {
         }}
       />
       <Tab.Screen
-        name="Fridge"
-        component={Fridge}
+        name="Recipes"
+        component={Recipes}
         options={{
           headerShown: false,
-          tabBarLabel: 'Fridge'
+          tabBarLabel: 'Recipes'
         }}
       />
     </Tab.Navigator>
@@ -61,14 +72,14 @@ const BottomTabNavigator = () => {
 const createStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     tabBar: {
-      backgroundColor: colors.neutral.surface, // Background color of the tab bar
+      backgroundColor: colors.neutral.surface,
       paddingBottom: 5,
       height: 60,
       borderTopWidth: 0,
-      elevation: 5, // Add shadow for Android
-      shadowOffset: { width: 0, height: 2 }, // Shadow for iOS
-      shadowOpacity: 0.2, // Shadow opacity for iOS
-      shadowRadius: 5 // Shadow radius for iOS
+      elevation: 5,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 5
     },
     tabBarLabel: {
       fontSize: 12,

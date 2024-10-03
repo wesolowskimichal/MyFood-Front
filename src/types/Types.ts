@@ -114,6 +114,7 @@ export type RootStackParamList = {
   Journal: undefined
   Test: undefined
   Fridge: undefined
+  Recipes: undefined
   Main: undefined
 }
 
@@ -125,6 +126,7 @@ export type ProductNotFoundScreenProps = NativeStackScreenProps<RootStackParamLi
 export type AddProductToComponentScreenProps = NativeStackScreenProps<RootStackParamList, 'AddProductToComponent'>
 export type ProductInfoScreenProps = NativeStackScreenProps<RootStackParamList, 'ProductInfo'>
 export type FridgeScreenProps = NativeStackScreenProps<RootStackParamList, 'Fridge'>
+export type RecipesScreenProps = NativeStackScreenProps<RootStackParamList, 'Recipes'>
 export type TestScreenProps = NativeStackScreenProps<ParamListBase, 'Test'>
 
 export type NavProps = {
