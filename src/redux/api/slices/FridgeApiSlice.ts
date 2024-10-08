@@ -46,7 +46,34 @@ export const fridgeApiSlice = createApi({
         }
       },
       transformResponse: (response: FridgePage) => ({ fridgeProducts: response.results, isFinished: !response.next }),
+      serializeQueryArgs: ({ endpointName, queryArgs }) => {
+        const { filters = {} } = queryArgs ?? {}
+        const { page: _page, ...otherFilters } = filters
+        return `${endpointName}-${JSON.stringify(otherFilters)}`
+      },
+      merge: (existing, incoming, { arg }) => {
+        const { page = 1 } = arg
 
+        if (page === 1 || !existing) {
+          return incoming
+        }
+
+        const mergedProducts = [
+          ...existing.fridgeProducts,
+          ...incoming.fridgeProducts.filter(
+            incomingProduct =>
+              !existing.fridgeProducts.some(existingProduct => existingProduct.id === incomingProduct.id)
+          )
+        ]
+
+        return {
+          fridgeProducts: mergedProducts,
+          isFinished: incoming.isFinished
+        }
+      },
+      forceRefetch({ currentArg, previousArg }) {
+        return currentArg?.page !== previousArg?.page
+      },
       providesTags: result =>
         result
           ? [
@@ -101,7 +128,6 @@ export const fridgeApiSlice = createApi({
               const fridgeIndex = draft.fridgeProducts.findIndex(f => f.id === id)
               if (fridgeIndex !== -1) {
                 draft.fridgeProducts[fridgeIndex].current_amount = body.current_amount
-                console.log('found fridge product:', draft.fridgeProducts[fridgeIndex])
               }
             })
           )
@@ -115,21 +141,10 @@ export const fridgeApiSlice = createApi({
         url: `api/fridge/${id}/`,
         method: 'DELETE'
       }),
-      onQueryStarted: async (id, { dispatch, queryFulfilled }) => {
-        const patchResult = dispatch(
-          fridgeApiSlice.util.updateQueryData('getFridges', { page: 1 }, draft => {
-            const index = draft.fridgeProducts.findIndex(fridge => fridge.id === id)
-            if (index !== -1) draft.fridgeProducts.splice(index, 1)
-          })
-        )
-        try {
-          await queryFulfilled
-        } catch (error) {
-          patchResult.undo()
-          console.error('Failed to delete fridge product:', error)
-        }
-      },
-      invalidatesTags: [{ type: 'Fridge', id: 'PARTIAL_LIST' }]
+      invalidatesTags: (_result, _error, id) => [
+        { type: 'Fridge', id: 'PARTIAL_LIST' },
+        { type: 'Fridge', id }
+      ]
     })
   })
 })

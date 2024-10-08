@@ -5,20 +5,28 @@ import _FridgeProductList from './_FridgeProductList'
 import _FridgeProductTile from './_FridgeProductTile'
 import { UnitAmountConverter, UnitProductConverter } from '../../helpers/UnitAmountConverter'
 import { debounce } from 'lodash'
-import { usePatchFridgeProductMutation, useRemoveFridgeProductMutation } from '../../redux/api/slices/FridgeApiSlice'
+import {
+  fridgeApiSlice,
+  usePatchFridgeProductMutation,
+  useRemoveFridgeProductMutation
+} from '../../redux/api/slices/FridgeApiSlice'
 import UpperLoader from '../upperLoader/UpperLoader'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/Store'
 import Dialog, { DialogContent } from '../dialog/Dialog'
 import Icon from 'react-native-vector-icons/Feather'
+import { useAppDispatch } from '../../hooks/useAppDispatch'
 
 type FridgeProductProps = {
   fridgeProduct: Fridge
   type?: 'tile' | 'list'
   style?: StyleProp<ViewStyle>
+  onProductRemove: (id: string) => void
 }
 
-const FridgeProduct = ({ fridgeProduct, style, type = 'tile' }: FridgeProductProps) => {
+const FridgeProduct = ({ fridgeProduct, style, type = 'tile', onProductRemove }: FridgeProductProps) => {
+  const dispatch = useAppDispatch()
+
   const colors = useSelector((state: RootState) => state.theme.colors)
   const styles = useMemo(() => createStyles(colors), [colors])
 
@@ -47,6 +55,8 @@ const FridgeProduct = ({ fridgeProduct, style, type = 'tile' }: FridgeProductPro
   const handleRemove = useCallback(async () => {
     try {
       await removeFridgeProduct(fridgeProduct.id)
+      onProductRemove(fridgeProduct.id)
+      dispatch(fridgeApiSlice.util.invalidateTags([{ type: 'Fridge', id: 'PARTIAL_LIST' }]))
       setIsRemoveProductDialogVisible(false)
     } catch (error) {
       console.error(error)

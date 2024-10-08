@@ -33,10 +33,11 @@ const Journal = ({ navigation, route }: JournalScreenProps) => {
   const {
     data: journalEntries,
     error: journalEntriesError,
-    isLoading: journalEntriesLoading
+    isLoading: journalEntriesLoading,
+    isFetching: journalEntriesFetching
   } = useGetJournalsByDateQuery(getDate(date))
 
-  const { data: meals, error: mealsError, isLoading: mealsLoading } = useGetMealsQuery()
+  const { data: meals, error: mealsError, isLoading: mealsLoading, isFetching: mealsFetching } = useGetMealsQuery()
 
   useEffect(() => {
     if (journalEntries && meals) {
@@ -101,7 +102,7 @@ const Journal = ({ navigation, route }: JournalScreenProps) => {
     }
   }, [])
 
-  if (journalEntriesLoading || mealsLoading) return <Loader />
+  if (journalEntriesLoading || journalEntriesFetching || mealsLoading || mealsFetching) return <Loader />
   if (journalEntriesError) return <Text>Fetching Journal Entries Error</Text>
   if (mealsError) return <Text>Fetching Meals Error</Text>
 

@@ -19,7 +19,7 @@ const ProductNotFound = ({ navigation, route }: ProductNotFoundScreenProps) => {
   const [searchType, setSearchType] = useState<'by_name' | 'by_barcode'>('by_barcode')
   const [accumulatedProducts, setAccumulatedProducts] = useState<ProductDetails[]>([])
 
-  const [trigger, { isLoading }] = useLazyGetProductsQuery()
+  const [trigger, { isLoading, isFetching }] = useLazyGetProductsQuery()
   const colors = useSelector((state: RootState) => state.theme.colors)
 
   useLayoutEffect(() => {
@@ -72,10 +72,10 @@ const ProductNotFound = ({ navigation, route }: ProductNotFoundScreenProps) => {
   }, [])
 
   const handleLoadMoreProducts = useCallback(() => {
-    if (!isLoading && !isFinished) {
+    if (!isLoading && !isFinished && !isFetching) {
       setPage(prevPage => prevPage + 1)
     }
-  }, [isLoading, isFinished])
+  }, [isLoading, isFinished, isFetching])
 
   const renderItem = ({ item }: { item: ProductDetails }) => (
     <ProductInfoBar product={item} navigation={navigation} meal={meal} fridge={fridge} />

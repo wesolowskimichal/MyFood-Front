@@ -11,7 +11,7 @@ import { AddProductToComponentScreenProps, Unit } from '../../types/Types'
 import { useAddFridgeProductMutation } from '../../redux/api/slices/FridgeApiSlice'
 
 const AddProductToComponent = ({ navigation, route }: AddProductToComponentScreenProps) => {
-  const [getProduct, { isLoading: isProductLoading }] = useLazyGetProductQuery()
+  const [getProduct, { isLoading: isProductLoading, isFetching: isProductFetching }] = useLazyGetProductQuery()
   const [addProductToJournal, { isLoading: isAddingProductToJournal }] = usePostJournalMutation()
   const [addProductToFridge, { isLoading: isAddingProductToFridge }] = useAddFridgeProductMutation()
   const navProduct = route.params?.product ?? null
@@ -57,7 +57,7 @@ const AddProductToComponent = ({ navigation, route }: AddProductToComponentScree
     [navProduct, navMeal]
   )
 
-  if (isProductLoading || isAddingProductToJournal || isAddingProductToFridge) {
+  if (isProductLoading || isAddingProductToJournal || isAddingProductToFridge || isProductFetching) {
     return <Loader />
   }
 
