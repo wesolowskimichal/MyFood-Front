@@ -8,6 +8,7 @@ import { useMemo } from 'react'
 const Recipes = ({ navigation }: RecipesScreenProps) => {
   const colors = useSelector((state: RootState) => state.theme.colors)
   const styles = useMemo(() => createStyles(colors), [colors])
+  
 
   return (
     <ScreenWrapper>
