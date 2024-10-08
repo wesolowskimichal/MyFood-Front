@@ -48,8 +48,7 @@ export const fridgeApiSlice = createApi({
       transformResponse: (response: FridgePage) => ({ fridgeProducts: response.results, isFinished: !response.next }),
       serializeQueryArgs: ({ endpointName, queryArgs }) => {
         const { filters = {} } = queryArgs ?? {}
-        const { page: _page, ...otherFilters } = filters
-        return `${endpointName}-${JSON.stringify(otherFilters)}`
+        return `${endpointName}-${JSON.stringify(filters)}`
       },
       merge: (existing, incoming, { arg }) => {
         const { page = 1 } = arg

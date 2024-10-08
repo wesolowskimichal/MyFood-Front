@@ -3,10 +3,13 @@ import { baseQueryWithReauth } from '../queries/BaseQueryReauth'
 import { Recipe, RecipePage, User } from '../../../types/Types'
 
 type GetRecipesQueryParams = {
-  'is-liked'?: boolean
-  shared?: boolean
-  name?: string
-  user?: User['id']
+  page: number
+  filters?: {
+    'is-liked'?: boolean
+    shared?: boolean
+    name?: string
+    user?: User['id']
+  }
 }
 
 type GetRecipesResponse = {
@@ -34,7 +37,22 @@ export const recipeApiSlice = createApi({
   tagTypes: ['Recipe'],
   endpoints: builder => ({
     getRecipes: builder.query<GetRecipesResponse, GetRecipesQueryParams>({
-      query: () => 'api/recipes/',
+      query: ({ page, filters }) => {
+        const queryParams = new URLSearchParams({ page: page.toString() })
+
+        if (filters) {
+          Object.entries(filters).forEach(([key, value]) => {
+            if (value !== undefined && value !== null) {
+              queryParams.append(key, value.toString())
+            }
+          })
+        }
+
+        return {
+          url: `api/recipes/?${queryParams.toString()}`,
+          method: 'GET'
+        }
+      },
       providesTags: result =>
         result
           ? [{ type: 'Recipe', id: 'LIST' }, ...result.recipes.map(({ id }) => ({ type: 'Recipe' as const, id }))]
@@ -42,7 +60,33 @@ export const recipeApiSlice = createApi({
       transformResponse: (response: RecipePage) => ({
         recipes: response.results,
         isFinished: !response.next
-      })
+      }),
+      serializeQueryArgs: ({ endpointName, queryArgs }) => {
+        const { filters = {} } = queryArgs ?? {}
+        return `${endpointName}-${JSON.stringify(filters)}`
+      },
+      merge: (existing, incoming, { arg }) => {
+        const { page = 1 } = arg
+
+        if (page === 1 || !existing) {
+          return incoming
+        }
+
+        const mergedRecipes = [
+          ...existing.recipes,
+          ...incoming.recipes.filter(
+            incomingRecipe => !existing.recipes.some(existingRecipe => existingRecipe.id === incomingRecipe.id)
+          )
+        ]
+
+        return {
+          recipes: mergedRecipes,
+          isFinished: incoming.isFinished
+        }
+      },
+      forceRefetch({ currentArg, previousArg }) {
+        return currentArg?.page !== previousArg?.page
+      }
     }),
     addRecipe: builder.mutation<Recipe, MutateRecipeBody>({
       query: recipe => ({
@@ -53,7 +97,7 @@ export const recipeApiSlice = createApi({
       onQueryStarted(_recipe, { dispatch, queryFulfilled }) {
         queryFulfilled.then(({ data }) => {
           dispatch(
-            recipeApiSlice.util.updateQueryData('getRecipes', {}, draft => {
+            recipeApiSlice.util.updateQueryData('getRecipes', { page: 1 }, draft => {
               draft.recipes.push(data)
             })
           )
@@ -73,7 +117,7 @@ export const recipeApiSlice = createApi({
       onQueryStarted(_recipe, { dispatch, queryFulfilled }) {
         queryFulfilled.then(({ data }) => {
           dispatch(
-            recipeApiSlice.util.updateQueryData('getRecipes', {}, draft => {
+            recipeApiSlice.util.updateQueryData('getRecipes', { page: 1 }, draft => {
               const index = draft.recipes.findIndex(recipe => recipe.id === data.id)
               draft.recipes[index] = data
             })
@@ -81,22 +125,15 @@ export const recipeApiSlice = createApi({
         })
       }
     }),
-    deleteRecipe: builder.mutation<void, string>({
+    removeRecipe: builder.mutation<void, string>({
       query: id => ({
         url: `api/recipes/${id}/`,
         method: 'DELETE'
       }),
-      onQueryStarted(_id, { dispatch, queryFulfilled }) {
-        queryFulfilled.then(() => {
-          dispatch(
-            recipeApiSlice.util.updateQueryData('getRecipes', {}, draft => {
-              const index = draft.recipes.findIndex(recipe => recipe.id === _id)
-              draft.recipes.splice(index, 1)
-            })
-          )
-        })
-      },
-      invalidatesTags: [{ type: 'Recipe', id: 'LIST' }]
+      invalidatesTags: (_result, _error, id) => [
+        { type: 'Recipe', id: 'LIST' },
+        { type: 'Recipe', id }
+      ]
     })
   })
 })
@@ -106,5 +143,5 @@ export const {
   useAddRecipeMutation,
   useGetRecipeByIdQuery,
   usePatchRecipeQuery,
-  useDeleteRecipeMutation
+  useRemoveRecipeMutation
 } = recipeApiSlice
