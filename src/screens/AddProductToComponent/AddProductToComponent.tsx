@@ -17,14 +17,25 @@ const AddProductToComponent = ({ navigation, route }: AddProductToComponentScree
   const navProduct = route.params?.product ?? null
   const navMeal = route.params.meal
   const navFridge = route.params.fridge
+  const navOnFridgeAdd = route.params.onFridgeAdd
 
   const handleProductScan = useCallback(
     async (barcode: BarcodeScanningResult) => {
       try {
         const response = await getProduct(barcode.data, true).unwrap()
-        navigation.navigate('AddProductToComponent', { product: response, meal: navMeal, fridge: navFridge })
+        navigation.navigate('AddProductToComponent', {
+          product: response,
+          meal: navMeal,
+          fridge: navFridge,
+          onFridgeAdd: navOnFridgeAdd
+        })
       } catch (error) {
-        navigation.navigate('ProductNotFound', { barcode: barcode.data, meal: navMeal, fridge: navFridge })
+        navigation.navigate('ProductNotFound', {
+          barcode: barcode.data,
+          meal: navMeal,
+          fridge: navFridge,
+          onFridgeAdd: navOnFridgeAdd
+        })
       }
     },
     [getProduct, navigation]
@@ -44,10 +55,11 @@ const AddProductToComponent = ({ navigation, route }: AddProductToComponentScree
           })
           navigation.navigate('Journal')
         } else if (navFridge) {
-          await addProductToFridge({
+          const { id } = await addProductToFridge({
             product: navProduct,
             current_amount: UnitProductConverter(amount, unit, navProduct)
-          })
+          }).unwrap()
+          navOnFridgeAdd?.(navProduct, UnitProductConverter(amount, unit, navProduct), id)
           navigation.navigate('Fridge')
         }
       } catch (error) {

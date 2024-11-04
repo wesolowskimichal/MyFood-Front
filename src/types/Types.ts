@@ -119,9 +119,24 @@ export type RecipePage = Page<Recipe>
 export type RootStackParamList = {
   Login: { infoText?: string; lastUsername?: string }
   ProductInfo: { product: ProductDetails }
-  AddProductToComponent: { product?: ProductDetails; meal?: Meal; fridge?: boolean }
-  ProductNotFound: { barcode: ProductBase['barcode']; meal?: Meal; fridge?: boolean }
-  AddProduct: { barcode?: string; meal?: Meal; fridge?: boolean }
+  AddProductToComponent: {
+    product?: ProductDetails
+    meal?: Meal
+    fridge?: boolean
+    onFridgeAdd?: (product: ProductDetails, amount: number, id: string) => void
+  }
+  ProductNotFound: {
+    barcode: ProductBase['barcode']
+    meal?: Meal
+    fridge?: boolean
+    onFridgeAdd?: (product: ProductDetails, amount: number, id: string) => void
+  }
+  AddProduct: {
+    barcode?: string
+    meal?: Meal
+    fridge?: boolean
+    onFridgeAdd?: (product: ProductDetails, amount: number, id: string) => void
+  }
   AddRecipe: undefined
   Register: undefined
   Journal: undefined

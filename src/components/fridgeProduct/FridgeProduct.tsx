@@ -23,7 +23,6 @@ type FridgeProductProps = {
   style?: StyleProp<ViewStyle>
   onProductRemove: (id: string) => void
   onProductEdit: (id: string, amount: number) => void
-  onProductAdd: (product: Fridge) => void
 }
 
 const FridgeProduct = ({ fridgeProduct, style, type = 'tile', onProductRemove, onProductEdit }: FridgeProductProps) => {

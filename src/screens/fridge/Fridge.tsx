@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { FlatList, StyleSheet, Text, View, TextInput, Pressable } from 'react-native'
-import { Fridge as IFridge, FridgeScreenProps, ThemeColors } from '../../types/Types'
+import { Fridge as IFridge, FridgeScreenProps, ThemeColors, ProductDetails } from '../../types/Types'
 import { fridgeApiSlice, useGetFridgesQuery } from '../../redux/api/slices/FridgeApiSlice'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/Store'
@@ -35,18 +35,18 @@ const Fridge = ({ navigation }: FridgeScreenProps) => {
     isFetching
   } = useGetFridgesQuery({ page, filters })
 
-  const fridgeProducts = useMemo(
-    () =>
-      fridgeProductsApi
-        .map(product => {
-          if (editedProducts.has(product.id)) {
-            return { ...product, current_amount: editedProducts.get(product.id) ?? product.current_amount }
-          }
-          return product
-        })
-        .filter(product => !deletedProducts.has(product.id)),
-    [fridgeProductsApi, editedProducts, deletedProducts]
-  )
+  const fridgeProducts = useMemo(() => {
+    const a = [...fridgeProductsApi, ...addedProducts]
+    console.log(a)
+    return [...fridgeProductsApi, ...addedProducts]
+      .map(product => {
+        if (editedProducts.has(product.id)) {
+          return { ...product, current_amount: editedProducts.get(product.id) ?? product.current_amount }
+        }
+        return product
+      })
+      .filter(product => !deletedProducts.has(product.id))
+  }, [fridgeProductsApi, addedProducts, editedProducts, deletedProducts])
 
   const handleLoadMoreProducts = useCallback(() => {
     if (!isFetching && !isFinished) {
@@ -62,8 +62,17 @@ const Fridge = ({ navigation }: FridgeScreenProps) => {
     setEditedProducts(prevProducts => new Map(prevProducts).set(id, amount))
   }, [])
 
-  const handleAddProduct = useCallback((product: IFridge) => {
-    setAddedProducts(prevProducts => [...prevProducts, product])
+  const handleAddProduct = useCallback((product: ProductDetails, current_amount: number, id: string) => {
+    setAddedProducts(prevProducts => [
+      ...prevProducts,
+      {
+        id,
+        product,
+        current_amount,
+        threshold: 0,
+        is_on_shopping_list: false
+      }
+    ])
   }, [])
 
   const renderItem = ({ item }: { item: IFridge }) => (
@@ -73,7 +82,6 @@ const Fridge = ({ navigation }: FridgeScreenProps) => {
       style={styles.productItem}
       onProductRemove={handleRemoveProduct}
       onProductEdit={handleEditProduct}
-      onProductAdd={handleAddProduct}
     />
   )
 
@@ -82,7 +90,7 @@ const Fridge = ({ navigation }: FridgeScreenProps) => {
   }, [])
 
   const handleOnAddProductClick = useCallback(() => {
-    navigation.navigate('AddProductToComponent', { fridge: true })
+    navigation.navigate('AddProductToComponent', { fridge: true, onFridgeAdd: handleAddProduct })
   }, [navigation])
 
   const areFiltersEmpty = useMemo(

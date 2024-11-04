@@ -11,14 +11,15 @@ type ProductInfoBarProps = {
   product: ProductDetails
   meal?: Meal
   fridge?: boolean
+  onFridgeAdd?: (product: ProductDetails, amount: number, id: string) => void
 }
 
-const ProductInfoBar = ({ navigation, product, meal, fridge }: ProductInfoBarProps) => {
+const ProductInfoBar = ({ navigation, product, meal, fridge, onFridgeAdd }: ProductInfoBarProps) => {
   const colors = useSelector((state: RootState) => state.theme.colors)
   const styles = useMemo(() => createStyles(colors), [colors])
 
   const handleProductSelect = useCallback(() => {
-    navigation.navigate('AddProductToComponent', { product: product, meal: meal, fridge: fridge })
+    navigation.navigate('AddProductToComponent', { product, meal, fridge, onFridgeAdd })
   }, [])
 
   const handleOnProductInfoClick = useCallback(() => {
