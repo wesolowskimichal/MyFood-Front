@@ -122,6 +122,7 @@ export type RootStackParamList = {
   AddProductToComponent: { product?: ProductDetails; meal?: Meal; fridge?: boolean }
   ProductNotFound: { barcode: ProductBase['barcode']; meal?: Meal; fridge?: boolean }
   AddProduct: { barcode?: string; meal?: Meal; fridge?: boolean }
+  AddRecipe: undefined
   Register: undefined
   Journal: undefined
   Test: undefined
@@ -139,6 +140,7 @@ export type AddProductToComponentScreenProps = NativeStackScreenProps<RootStackP
 export type ProductInfoScreenProps = NativeStackScreenProps<RootStackParamList, 'ProductInfo'>
 export type FridgeScreenProps = NativeStackScreenProps<RootStackParamList, 'Fridge'>
 export type RecipesScreenProps = NativeStackScreenProps<RootStackParamList, 'Recipes'>
+export type AddRecipeScreenProps = NativeStackScreenProps<RootStackParamList, 'AddRecipe'>
 export type TestScreenProps = NativeStackScreenProps<ParamListBase, 'Test'>
 
 export type NavProps = {

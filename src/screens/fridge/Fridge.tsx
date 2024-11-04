@@ -12,11 +12,8 @@ import MaterialIcon from 'react-native-vector-icons/MaterialIcons'
 import EmbeddedSwitch from '../../components/embeddedSwitch/EmbeddedSwitch'
 import Loader from '../../components/loader/Loader'
 import UpperLoader from '../../components/upperLoader/UpperLoader'
-import { useAppDispatch } from '../../hooks/useAppDispatch'
 
 const Fridge = ({ navigation }: FridgeScreenProps) => {
-  const dispatch = useAppDispatch()
-
   const colors = useSelector((state: RootState) => state.theme.colors)
   const styles = useMemo(() => createStyles(colors), [colors])
 
@@ -26,7 +23,9 @@ const Fridge = ({ navigation }: FridgeScreenProps) => {
     'product-name': undefined
   })
 
-  const [deletedProducts, setDeletedProducts] = useState<string[]>([])
+  const [addedProducts, setAddedProducts] = useState<IFridge[]>([])
+  const [editedProducts, setEditedProducts] = useState<Map<string, number>>(new Map())
+  const [deletedProducts, setDeletedProducts] = useState<Set<string>>(new Set())
   const [viewType, setViewType] = useState<'tile' | 'list'>('tile')
   const [page, setPage] = useState(1)
 
@@ -37,8 +36,16 @@ const Fridge = ({ navigation }: FridgeScreenProps) => {
   } = useGetFridgesQuery({ page, filters })
 
   const fridgeProducts = useMemo(
-    () => (fridgeApiSlice ? fridgeProductsApi.filter(product => !deletedProducts.includes(product.id)) : []),
-    [fridgeProductsApi, deletedProducts]
+    () =>
+      fridgeProductsApi
+        .map(product => {
+          if (editedProducts.has(product.id)) {
+            return { ...product, current_amount: editedProducts.get(product.id) ?? product.current_amount }
+          }
+          return product
+        })
+        .filter(product => !deletedProducts.has(product.id)),
+    [fridgeProductsApi, editedProducts, deletedProducts]
   )
 
   const handleLoadMoreProducts = useCallback(() => {
@@ -47,13 +54,17 @@ const Fridge = ({ navigation }: FridgeScreenProps) => {
     }
   }, [isFetching, fridgeProducts])
 
-  const handleRemoveProduct = useCallback(
-    (id: string) => {
-      setDeletedProducts(prevProducts => [...prevProducts, id])
-      dispatch(fridgeApiSlice.util.invalidateTags([{ type: 'Fridge', id: 'PARTIAL_LIST' }]))
-    },
-    [dispatch]
-  )
+  const handleRemoveProduct = useCallback((id: string) => {
+    setDeletedProducts(prevProducts => new Set(prevProducts).add(id))
+  }, [])
+
+  const handleEditProduct = useCallback((id: string, amount: number) => {
+    setEditedProducts(prevProducts => new Map(prevProducts).set(id, amount))
+  }, [])
+
+  const handleAddProduct = useCallback((product: IFridge) => {
+    setAddedProducts(prevProducts => [...prevProducts, product])
+  }, [])
 
   const renderItem = ({ item }: { item: IFridge }) => (
     <FridgeProduct
@@ -61,6 +72,8 @@ const Fridge = ({ navigation }: FridgeScreenProps) => {
       type={viewType}
       style={styles.productItem}
       onProductRemove={handleRemoveProduct}
+      onProductEdit={handleEditProduct}
+      onProductAdd={handleAddProduct}
     />
   )
 

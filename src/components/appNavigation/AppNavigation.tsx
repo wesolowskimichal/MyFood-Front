@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { StyleSheet } from 'react-native'
-import { loadTokens } from '../../redux/slices/AuthSlice'
+import { clearAuth, loadTokens } from '../../redux/slices/AuthSlice'
 import Login from '../../screens/auth/Login'
 import { useAppSelector } from '../../hooks/useAppDispatch'
 import { getTheme } from '../../redux/slices/ThemeSlice'
@@ -17,6 +17,7 @@ import Loader from '../loader/Loader'
 import ProductNotFound from '../../screens/productNotFound/ProductNotFound'
 import AddProduct from '../../screens/addProduct/AddProduct'
 import AddProductToComponent from '../../screens/AddProductToComponent/AddProductToComponent'
+import AddRecipe from '../../screens/addRecipe/AddRecipe'
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
 
@@ -75,6 +76,17 @@ const AppNavigation = () => {
                 animationTypeForReplace: 'push',
                 animation: 'slide_from_right',
                 title: 'Add Product'
+              }}
+            />
+            <Stack.Screen
+              name="AddRecipe"
+              component={AddRecipe}
+              options={{
+                headerShown: true,
+                presentation: 'modal',
+                animationTypeForReplace: 'push',
+                animation: 'slide_from_right',
+                title: 'Add Recipe'
               }}
             />
             <Stack.Screen

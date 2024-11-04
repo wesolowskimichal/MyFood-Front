@@ -22,9 +22,11 @@ type FridgeProductProps = {
   type?: 'tile' | 'list'
   style?: StyleProp<ViewStyle>
   onProductRemove: (id: string) => void
+  onProductEdit: (id: string, amount: number) => void
+  onProductAdd: (product: Fridge) => void
 }
 
-const FridgeProduct = ({ fridgeProduct, style, type = 'tile', onProductRemove }: FridgeProductProps) => {
+const FridgeProduct = ({ fridgeProduct, style, type = 'tile', onProductRemove, onProductEdit }: FridgeProductProps) => {
   const dispatch = useAppDispatch()
 
   const colors = useSelector((state: RootState) => state.theme.colors)
@@ -73,6 +75,7 @@ const FridgeProduct = ({ fridgeProduct, style, type = 'tile', onProductRemove }:
           current_amount: _amount
         }
       })
+      onProductEdit(fridgeProduct.id, _amount)
     }, 1000),
     [fridgeProduct, patchFridgeProduct]
   )
