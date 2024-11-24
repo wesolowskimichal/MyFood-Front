@@ -9,6 +9,7 @@ import { UnitProductConverter } from '../../helpers/UnitAmountConverter'
 import AddProductForm from '../../forms/AddProductForm'
 import { AddProductToComponentScreenProps, Unit } from '../../types/Types'
 import { useAddFridgeProductMutation } from '../../redux/api/slices/FridgeApiSlice'
+import { useDataQuery } from '../../redux/slices/dataStore/hooks/useDataQuery'
 
 const AddProductToComponent = ({ navigation, route }: AddProductToComponentScreenProps) => {
   const [getProduct, { isLoading: isProductLoading, isFetching: isProductFetching }] = useLazyGetProductQuery()
@@ -17,7 +18,10 @@ const AddProductToComponent = ({ navigation, route }: AddProductToComponentScree
   const navProduct = route.params?.product ?? null
   const navMeal = route.params.meal
   const navFridge = route.params.fridge
-  const navOnFridgeAdd = route.params.onFridgeAdd
+  const storeName = navFridge ? 'Fridge' : 'Journal'
+  const { addItem, editItem, deleteItem } = useDataQuery({
+    storeName
+  })
 
   const handleProductScan = useCallback(
     async (barcode: BarcodeScanningResult) => {
@@ -26,15 +30,13 @@ const AddProductToComponent = ({ navigation, route }: AddProductToComponentScree
         navigation.navigate('AddProductToComponent', {
           product: response,
           meal: navMeal,
-          fridge: navFridge,
-          onFridgeAdd: navOnFridgeAdd
+          fridge: navFridge
         })
       } catch (error) {
         navigation.navigate('ProductNotFound', {
           barcode: barcode.data,
           meal: navMeal,
-          fridge: navFridge,
-          onFridgeAdd: navOnFridgeAdd
+          fridge: navFridge
         })
       }
     },
@@ -59,7 +61,14 @@ const AddProductToComponent = ({ navigation, route }: AddProductToComponentScree
             product: navProduct,
             current_amount: UnitProductConverter(amount, unit, navProduct)
           }).unwrap()
-          navOnFridgeAdd?.(navProduct, UnitProductConverter(amount, unit, navProduct), id)
+          addItem({
+            id,
+            product: navProduct,
+            current_amount: UnitProductConverter(amount, unit, navProduct),
+            threshold: 0,
+            is_on_shopping_list: false
+          })
+          // navOnFridgeAdd?.(navProduct, UnitProductConverter(amount, unit, navProduct), id)
           navigation.navigate('Fridge')
         }
       } catch (error) {

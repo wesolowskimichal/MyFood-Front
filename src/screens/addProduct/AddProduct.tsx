@@ -29,7 +29,7 @@ const AddProduct = ({ navigation, route }: AddProductScreenProps) => {
   const navBarcode = route.params.barcode ?? null
   const navMeal = route.params.meal
   const navFridge = route.params.fridge
-  const navOnFridgeAdd = route.params.onFridgeAdd
+  // const navOnFridgeAdd = route.params.onFridgeAdd
   const [addProduct, { isLoading: isAddingProduct }] = useAddProductMutation()
 
   const colors = useSelector((state: RootState) => state.theme.colors)
@@ -161,8 +161,8 @@ const AddProduct = ({ navigation, route }: AddProductScreenProps) => {
         navigation.navigate('AddProductToComponent', {
           product: result,
           meal: navMeal,
-          fridge: navFridge,
-          onFridgeAdd: navOnFridgeAdd
+          fridge: navFridge
+          // onFridgeAdd: navOnFridgeAdd
         })
       } else {
         navigation.navigate('Journal')

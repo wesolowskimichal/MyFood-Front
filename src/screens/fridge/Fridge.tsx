@@ -12,6 +12,7 @@ import MaterialIcon from 'react-native-vector-icons/MaterialIcons'
 import EmbeddedSwitch from '../../components/embeddedSwitch/EmbeddedSwitch'
 import Loader from '../../components/loader/Loader'
 import UpperLoader from '../../components/upperLoader/UpperLoader'
+import { useDataQuery } from '../../redux/slices/dataStore/hooks/useDataQuery'
 
 const Fridge = ({ navigation }: FridgeScreenProps) => {
   const colors = useSelector((state: RootState) => state.theme.colors)
@@ -23,9 +24,13 @@ const Fridge = ({ navigation }: FridgeScreenProps) => {
     'product-name': undefined
   })
 
-  const [addedProducts, setAddedProducts] = useState<IFridge[]>([])
-  const [editedProducts, setEditedProducts] = useState<Map<string, number>>(new Map())
-  const [deletedProducts, setDeletedProducts] = useState<Set<string>>(new Set())
+  const { added, edited, deleted, addItem, isEdited, editItem, getEdited, isDeleted, deleteItem } = useDataQuery<
+    IFridge,
+    number
+  >({
+    storeName: 'Fridge'
+  })
+
   const [viewType, setViewType] = useState<'tile' | 'list'>('tile')
   const [page, setPage] = useState(1)
 
@@ -36,17 +41,17 @@ const Fridge = ({ navigation }: FridgeScreenProps) => {
   } = useGetFridgesQuery({ page, filters })
 
   const fridgeProducts = useMemo(() => {
-    const a = [...fridgeProductsApi, ...addedProducts]
+    const a = [...fridgeProductsApi, ...added]
     console.log(a)
-    return [...fridgeProductsApi, ...addedProducts]
+    return [...fridgeProductsApi, ...added]
       .map(product => {
-        if (editedProducts.has(product.id)) {
-          return { ...product, current_amount: editedProducts.get(product.id) ?? product.current_amount }
+        if (isEdited(product.id)) {
+          return { ...product, current_amount: getEdited(product.id) ?? product.current_amount }
         }
         return product
       })
-      .filter(product => !deletedProducts.has(product.id))
-  }, [fridgeProductsApi, addedProducts, editedProducts, deletedProducts])
+      .filter(product => !isDeleted(product.id))
+  }, [fridgeProductsApi, added, edited, deleted, isEdited, getEdited, isDeleted])
 
   const handleLoadMoreProducts = useCallback(() => {
     if (!isFetching && !isFinished) {
@@ -55,24 +60,21 @@ const Fridge = ({ navigation }: FridgeScreenProps) => {
   }, [isFetching, fridgeProducts])
 
   const handleRemoveProduct = useCallback((id: string) => {
-    setDeletedProducts(prevProducts => new Set(prevProducts).add(id))
+    deleteItem(id)
   }, [])
 
   const handleEditProduct = useCallback((id: string, amount: number) => {
-    setEditedProducts(prevProducts => new Map(prevProducts).set(id, amount))
+    editItem(id, amount)
   }, [])
 
   const handleAddProduct = useCallback((product: ProductDetails, current_amount: number, id: string) => {
-    setAddedProducts(prevProducts => [
-      ...prevProducts,
-      {
-        id,
-        product,
-        current_amount,
-        threshold: 0,
-        is_on_shopping_list: false
-      }
-    ])
+    addItem({
+      id,
+      product,
+      current_amount,
+      threshold: 0,
+      is_on_shopping_list: false
+    })
   }, [])
 
   const renderItem = ({ item }: { item: IFridge }) => (
@@ -80,7 +82,7 @@ const Fridge = ({ navigation }: FridgeScreenProps) => {
       fridgeProduct={item}
       type={viewType}
       style={styles.productItem}
-      onProductRemove={handleRemoveProduct}
+      onProductRemove={deleteItem}
       onProductEdit={handleEditProduct}
     />
   )
@@ -90,7 +92,7 @@ const Fridge = ({ navigation }: FridgeScreenProps) => {
   }, [])
 
   const handleOnAddProductClick = useCallback(() => {
-    navigation.navigate('AddProductToComponent', { fridge: true, onFridgeAdd: handleAddProduct })
+    navigation.navigate('AddProductToComponent', { fridge: true })
   }, [navigation])
 
   const areFiltersEmpty = useMemo(

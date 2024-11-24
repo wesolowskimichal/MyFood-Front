@@ -123,19 +123,16 @@ export type RootStackParamList = {
     product?: ProductDetails
     meal?: Meal
     fridge?: boolean
-    onFridgeAdd?: (product: ProductDetails, amount: number, id: string) => void
   }
   ProductNotFound: {
     barcode: ProductBase['barcode']
     meal?: Meal
     fridge?: boolean
-    onFridgeAdd?: (product: ProductDetails, amount: number, id: string) => void
   }
   AddProduct: {
     barcode?: string
     meal?: Meal
     fridge?: boolean
-    onFridgeAdd?: (product: ProductDetails, amount: number, id: string) => void
   }
   AddRecipe: undefined
   Register: undefined
@@ -185,3 +182,35 @@ export type ThemeColors = {
   }
 }
 //#endregion
+
+export type DataState<T> = {
+  added: T[]
+  edited: Record<string, T>
+  // edited: Map<string, T>
+  deleted: string[]
+}
+
+export namespace PS {
+  enum Response {
+    OK = 200,
+    CREATED = 201,
+    NO_CONTENT = 204,
+    BAD_REQUEST = 400,
+    NOT_FOUND = 404
+  }
+
+  export type SuccessResponse<T> = {
+    status: Response.OK | Response.CREATED | Response.NO_CONTENT
+    data: T
+  }
+
+  export type ErrorResponse = {
+    status: Response.BAD_REQUEST | Response.NOT_FOUND
+    message: string
+  }
+
+  export type FunctionResponse = {
+    status: Response
+    response: SuccessResponse<unknown> | ErrorResponse
+  }
+}

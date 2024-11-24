@@ -12,7 +12,7 @@ import { RootState } from '../../redux/Store'
 import IonIcon from 'react-native-vector-icons/Ionicons'
 
 const ProductNotFound = ({ navigation, route }: ProductNotFoundScreenProps) => {
-  const { barcode, meal, fridge, onFridgeAdd } = route.params
+  const { barcode, meal, fridge } = route.params
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState(barcode)
   const [isFinished, setIsFinished] = useState(true)
@@ -78,15 +78,12 @@ const ProductNotFound = ({ navigation, route }: ProductNotFoundScreenProps) => {
   }, [isLoading, isFinished, isFetching])
 
   const renderItem = ({ item }: { item: ProductDetails }) => (
-    <ProductInfoBar product={item} navigation={navigation} meal={meal} fridge={fridge} onFridgeAdd={onFridgeAdd} />
+    <ProductInfoBar product={item} navigation={navigation} meal={meal} fridge={fridge} />
   )
-
-  if (isLoading && page === 1) {
-    return <Loader />
-  }
 
   return (
     <ScreenWrapper>
+      {isLoading && page === 1 ? <Loader /> : null}
       <TextInput
         value={search}
         onChangeText={handleSearchInput}
@@ -95,7 +92,7 @@ const ProductNotFound = ({ navigation, route }: ProductNotFoundScreenProps) => {
         placeholderTextColor={colors.neutral.text}
       />
       <Pressable
-        onPress={() => navigation.navigate('AddProduct', { barcode, meal, fridge, onFridgeAdd })}
+        onPress={() => navigation.navigate('AddProduct', { barcode, meal, fridge })}
         style={{
           backgroundColor: colors.neutral.surface,
           padding: 16,
