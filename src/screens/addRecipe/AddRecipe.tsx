@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from 'react'
+import React, { useMemo, useEffect, useState } from 'react'
 import { View, Text, TextInput, Button, Switch, StyleSheet, Pressable } from 'react-native'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -6,12 +6,19 @@ import Animated, { useSharedValue, withTiming, useAnimatedStyle } from 'react-na
 import { z } from 'zod'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/Store'
-import { ThemeColors } from '../../types/Types'
+import { AddRecipeScreenProps, ThemeColors } from '../../types/Types'
 import StepCreator from '../../components/stepCreator/StepCreator'
+import DateTimePickerModal from 'react-native-modal-datetime-picker'
+import ProductInserter from '../../components/productInserter/ProductInserter'
+import { useAddRecipeMutation } from '../../redux/api/slices/RecipeApiSlice'
+import * as ImagePicker from 'expo-image-picker'
+import * as ImageManipulator from 'expo-image-manipulator'
+import { Image } from 'expo-image'
+import * as FileSystem from 'expo-file-system'
 
 const recipeSchema = z.object({
   name: z.string().min(1, { message: 'Name is required' }),
-  description: z.string().optional(),
+  description: z.string().min(1, { message: 'Description is required' }),
   shared: z.boolean(),
   products: z.array(
     z.object({
@@ -19,14 +26,17 @@ const recipeSchema = z.object({
       amount_needed: z.number().min(1, { message: 'Amount needed must be greater than 0' })
     })
   ),
-  preparation: z.string().optional(),
-  time: z.string().optional(),
+  preparation: z.string(),
+  time: z.string(),
   difficulty: z.enum(['easy', 'medium', 'hard'], { message: 'Difficulty must be set' }),
   servings: z.number().min(1, { message: 'Servings must be greater than 0' }),
   picture: z.string().optional()
 })
 
-const AddRecipe = () => {
+type recipeType = z.infer<typeof recipeSchema>
+
+const AddRecipe = ({ navigation }: AddRecipeScreenProps) => {
+  const [addRecipe, { isLoading: isAddRecipeLoading, isError: isAddRecipeError }] = useAddRecipeMutation()
   const colors = useSelector((state: RootState) => state.theme.colors)
   const styles = useMemo(() => createStyles(colors), [colors])
 
@@ -35,8 +45,29 @@ const AddRecipe = () => {
     handleSubmit,
     formState: { errors }
   } = useForm({
-    resolver: zodResolver(recipeSchema)
+    resolver: zodResolver(recipeSchema),
+    defaultValues: {
+      name: '',
+      description: '',
+      shared: false,
+      products: [],
+      preparation: '',
+      time: '',
+      difficulty: '',
+      servings: 1,
+      picture: ''
+    }
   })
+
+  const [isTimePickerVisible, setTimePickerVisibility] = useState(false)
+
+  const showTimePicker = () => {
+    setTimePickerVisibility(true)
+  }
+
+  const hideTimePicker = () => {
+    setTimePickerVisibility(false)
+  }
 
   const selectedDifficulty = useSharedValue(-1)
   const slideValue = useSharedValue(-300)
@@ -83,8 +114,40 @@ const AddRecipe = () => {
     })
   }
 
-  const onSubmit = (data: any) => {
-    console.log('Form Data:', data)
+  const pickImage = async (onChange: (uri: string) => void) => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1
+    })
+
+    if (!result.canceled) {
+      const manipResult = await ImageManipulator.manipulateAsync(
+        result.assets[0].uri,
+        [{ resize: { width: 300, height: 300 } }],
+        { compress: 1, format: ImageManipulator.SaveFormat.JPEG }
+      )
+      onChange(manipResult.uri)
+    }
+  }
+
+  const onSubmit = async (data: any) => {
+    const payload: recipeType = { ...data }
+
+    if (data.picture) {
+      const base64Image = await FileSystem.readAsStringAsync(data.picture, { encoding: 'base64' })
+      payload.picture = `data:image/jpeg;base64,${base64Image}`
+    } else {
+      delete payload.picture
+    }
+    console.log(payload)
+    try {
+      await addRecipe(payload).unwrap()
+      navigation.goBack()
+    } catch (error) {
+      console.error('Error adding recipe:', error)
+    }
   }
 
   return (
@@ -92,109 +155,207 @@ const AddRecipe = () => {
       <Animated.View style={styles.section}>
         <Text style={styles.sectionHeader}>General Information</Text>
         <Controller
-          name="name"
+          name="picture"
           control={control}
           render={({ field: { onChange, value } }) => (
-            <>
-              <Text style={[styles.label, errors.name && { color: colors.complementary.danger }]}>Recipe Name</Text>
-              <TextInput
-                style={[styles.input, errors.name && styles.inputError]}
-                onChangeText={onChange}
-                value={value}
+            <View style={{ justifyContent: 'center', alignItems: 'center', marginBottom: 12 }}>
+              <Image
+                source={value ? { uri: value } : require('../../assets/images/recipe-default.jpg')}
+                style={{ width: 100, height: 100, borderRadius: 4, marginBottom: 12 }}
               />
-              {errors.name && <Text style={styles.errorText}>{errors.name.message as string}</Text>}
-            </>
-          )}
-        />
-
-        <Controller
-          name="description"
-          control={control}
-          render={({ field: { onChange, value } }) => (
-            <>
-              <Text style={styles.label}>Description</Text>
-              <TextInput style={styles.input} onChangeText={onChange} value={value} multiline />
-            </>
-          )}
-        />
-
-        <Controller
-          name="shared"
-          control={control}
-          render={({ field: { onChange, value } }) => (
-            <View style={styles.toggleWrapper}>
-              <Text style={styles.label}>Shared</Text>
-              <Switch
-                trackColor={{ false: colors.complementary.info, true: colors.complementary.info }}
-                thumbColor={value ? colors.accent : customColors.defaultBackground}
-                onValueChange={onChange}
-                value={value}
-              />
+              <Pressable
+                onPress={() => pickImage(onChange)}
+                style={{
+                  paddingVertical: 4,
+                  paddingHorizontal: 16,
+                  borderRadius: 4,
+                  borderWidth: 1,
+                  borderColor: colors.accent,
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                }}
+              >
+                <Text
+                  style={{
+                    color: colors.accent
+                  }}
+                >
+                  Select Image
+                </Text>
+              </Pressable>
             </View>
           )}
         />
 
-        <Controller
-          name="difficulty"
-          control={control}
-          render={({ field: { onChange, value: _value } }) => (
-            <>
-              <Text style={[styles.label, errors.difficulty && { color: colors.complementary.danger }]}>
-                Difficulty
-              </Text>
-              <View style={styles.difficultyContainer}>
-                {['easy', 'medium', 'hard'].map((level, index) => {
-                  const animatedStyles = getAnimatedDifficultyStyles(index)
-                  return (
-                    <Animated.View key={level} style={[styles.difficultyButton, animatedStyles]}>
-                      <Pressable
-                        onPress={() => {
-                          onChange(level)
-                          selectedDifficulty.value = index
-                        }}
-                      >
-                        <Text style={styles.difficultyText}>{level}</Text>
-                      </Pressable>
-                    </Animated.View>
-                  )
-                })}
-              </View>
-              {errors.difficulty && <Text style={styles.errorText}>{errors.difficulty.message as string}</Text>}
-            </>
-          )}
-        />
-
-        <Controller
-          name="servings"
-          control={control}
-          render={({ field: { onChange, value } }) => (
-            <>
-              <View style={[styles.toggleWrapper, { marginBottom: 0 }]}>
-                <Text style={[styles.label, errors.servings && { color: colors.complementary.danger }]}>Servings</Text>
+        <View style={{ padding: 8 }}>
+          <Controller
+            name="name"
+            control={control}
+            render={({ field: { onChange, value } }) => (
+              <>
+                <Text style={[styles.label, errors.name && { color: colors.complementary.danger }]}>Recipe Name</Text>
                 <TextInput
-                  style={[styles.input, { textAlign: 'center' }, errors.servings && styles.inputError]}
-                  keyboardType="numeric"
-                  onChangeText={text => {
-                    const numberValue = parseInt(text, 10)
-                    onChange(isNaN(numberValue) ? undefined : numberValue)
-                  }}
-                  value={value?.toString()}
+                  style={[styles.input, errors.name && styles.inputError]}
+                  onChangeText={onChange}
+                  value={value}
+                />
+                {errors.name && <Text style={styles.errorText}>{errors.name.message as string}</Text>}
+              </>
+            )}
+          />
+
+          <Controller
+            name="description"
+            control={control}
+            render={({ field: { onChange, value } }) => (
+              <>
+                <Text style={styles.label}>Description</Text>
+                <TextInput style={[styles.input, { minHeight: 64 }]} onChangeText={onChange} value={value} multiline />
+              </>
+            )}
+          />
+
+          <Controller
+            name="shared"
+            control={control}
+            render={({ field: { onChange, value } }) => (
+              <View style={styles.toggleWrapper}>
+                <Text style={styles.label}>Shared</Text>
+                <Switch
+                  trackColor={{ false: colors.neutral.border, true: colors.complementary.info }}
+                  thumbColor={value ? colors.accent : colors.neutral.text}
+                  onValueChange={onChange}
+                  value={value}
                 />
               </View>
-              {errors.servings && <Text style={styles.errorText}>{errors.servings.message as string}</Text>}
-            </>
-          )}
-        />
+            )}
+          />
+
+          <Controller
+            name="difficulty"
+            control={control}
+            render={({ field: { onChange, value: _value } }) => (
+              <>
+                <Text style={[styles.label, errors.difficulty && { color: colors.complementary.danger }]}>
+                  Difficulty
+                </Text>
+                <View style={styles.difficultyContainer}>
+                  {['easy', 'medium', 'hard'].map((level, index) => {
+                    const animatedStyles = getAnimatedDifficultyStyles(index)
+                    return (
+                      <Animated.View key={level} style={[styles.difficultyButton, animatedStyles]}>
+                        <Pressable
+                          onPress={() => {
+                            onChange(level)
+                            selectedDifficulty.value = index
+                          }}
+                        >
+                          <Text style={styles.difficultyText}>{level}</Text>
+                        </Pressable>
+                      </Animated.View>
+                    )
+                  })}
+                </View>
+                {errors.difficulty && <Text style={styles.errorText}>{errors.difficulty.message as string}</Text>}
+              </>
+            )}
+          />
+
+          <Controller
+            name="servings"
+            control={control}
+            render={({ field: { onChange, value } }) => (
+              <>
+                <View style={[styles.toggleWrapper, { marginBottom: 0 }]}>
+                  <Text style={[styles.label, errors.servings && { color: colors.complementary.danger }]}>
+                    Servings
+                  </Text>
+                  <TextInput
+                    style={[styles.input, { textAlign: 'center' }, errors.servings && styles.inputError]}
+                    keyboardType="numeric"
+                    onChangeText={text => {
+                      const numberValue = parseInt(text, 10)
+                      onChange(isNaN(numberValue) ? undefined : numberValue)
+                    }}
+                    value={value?.toString()}
+                  />
+                </View>
+                {errors.servings && <Text style={styles.errorText}>{errors.servings.message as string}</Text>}
+              </>
+            )}
+          />
+        </View>
       </Animated.View>
       <Animated.View style={styles.section}>
         <Text style={styles.sectionHeader}>Preparation</Text>
-        <Controller
-          name="preparation"
-          control={control}
-          render={({ field: { onChange } }) => <StepCreator type="edit" setData={onChange} />}
-        />
+        <View style={{ padding: 8 }}>
+          <Controller
+            name="time"
+            control={control}
+            render={({ field: { onChange, value } }) => (
+              <>
+                <Text style={[styles.label, errors.time && { color: colors.complementary.danger }]}>Cooking Time</Text>
+                <Pressable onPress={showTimePicker}>
+                  <View style={[styles.input, errors.time && styles.inputError]}>
+                    <Text style={styles.timeText}>{value || 'Select Time'}</Text>
+                  </View>
+                </Pressable>
+                {errors.time && <Text style={styles.errorText}>{errors.time.message as string}</Text>}
+                <DateTimePickerModal
+                  isVisible={isTimePickerVisible}
+                  mode="time"
+                  date={new Date(new Date().setHours(0, 0, 0, 0))}
+                  onConfirm={data => {
+                    const formattedTime = `${data.getHours().toString().padStart(2, '0')}:${data
+                      .getMinutes()
+                      .toString()
+                      .padStart(2, '0')}`
+                    onChange(formattedTime)
+                    hideTimePicker()
+                  }}
+                  onCancel={hideTimePicker}
+                />
+              </>
+            )}
+          />
+          <Text style={[styles.label, errors.time && { color: colors.complementary.danger }]}>Preparation steps</Text>
+          <Controller
+            name="preparation"
+            control={control}
+            render={({ field: { onChange } }) => <StepCreator type="edit" setData={onChange} />}
+          />
+        </View>
       </Animated.View>
-      <Button title="Add Recipe" onPress={handleSubmit(onSubmit)} color="#4CAF50" />
+      <Animated.View style={styles.section}>
+        <Text style={styles.sectionHeader}>Products</Text>
+        <View style={{ padding: 8 }}>
+          <Controller
+            name="products"
+            control={control}
+            render={({ field: { onChange } }) => (
+              <ProductInserter type="add" setData={onChange} navigation={navigation} />
+            )}
+          />
+        </View>
+      </Animated.View>
+      <Pressable
+        onPress={handleSubmit(onSubmit)}
+        style={{
+          backgroundColor: colors.accent
+        }}
+      >
+        <Text
+          style={{
+            color: colors.primary,
+            padding: 8,
+            textAlign: 'center',
+            fontSize: 16,
+            fontWeight: '600'
+          }}
+        >
+          ADD RECIPE
+        </Text>
+      </Pressable>
     </Animated.ScrollView>
   )
 }
@@ -204,6 +365,10 @@ const createStyles = (colors: ThemeColors) =>
     formContainer: {
       padding: 16,
       backgroundColor: colors.primary
+    },
+    timeText: {
+      color: colors.neutral.text,
+      fontSize: 16
     },
     section: {
       marginBottom: 20
@@ -224,8 +389,9 @@ const createStyles = (colors: ThemeColors) =>
     input: {
       borderWidth: 1,
       borderColor: colors.neutral.border,
-      borderRadius: 8,
-      padding: 12,
+      borderRadius: 4,
+      padding: 4,
+      paddingHorizontal: 8,
       marginBottom: 16,
       backgroundColor: colors.neutral.surface,
       color: colors.neutral.text
@@ -250,7 +416,7 @@ const createStyles = (colors: ThemeColors) =>
     },
     difficultyButton: {
       padding: 8,
-      borderRadius: 8,
+      borderRadius: 4,
       width: '30%',
       alignItems: 'center'
     },

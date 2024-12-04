@@ -5,6 +5,7 @@ import { UnitAmountConverter, UnitProductConverter } from '../../helpers/UnitAmo
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/Store'
 import Icon from 'react-native-vector-icons/Feather'
+import Ionicons from 'react-native-vector-icons/Ionicons'
 import EntypoIcon from 'react-native-vector-icons/Entypo'
 import { NutrientsCounter } from '../../helpers/NutrientsCounter'
 import { CountKcal } from '../../helpers/CountKcal'
@@ -140,8 +141,18 @@ const Product = ({
   return (
     <View style={styles.Product}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Pressable onPress={handleOnProductInfoClick}>
-          <Icon name="info" size={14} color={colors.accent} />
+        <Pressable
+          onPress={handleOnProductInfoClick}
+          style={{
+            borderRadius: 4,
+            borderWidth: 1,
+            borderColor: colors.accent,
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 1
+          }}
+        >
+          <Ionicons name="information" size={14} color={colors.accent} />
         </Pressable>
         <Dialog visible={isRemoveProductDialogVisible} setVisible={setIsRemoveProductDialogVisible}>
           <DialogTrigger style={styles.DialogTrigger}>
@@ -189,27 +200,19 @@ const Product = ({
 
 const createStyles = (colors: ThemeColors) =>
   StyleSheet.create({
-    ItemStyle: {
-      backgroundColor: 'red',
-      color: 'red'
-    },
     Product: {
-      padding: 16,
       marginVertical: 8,
-      borderRadius: 10,
+      borderRadius: 4,
+      padding: 8,
       backgroundColor: colors.neutral.surface,
-      shadowColor: colors.neutral.text,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 2
+      elevation: 4
     },
     Row: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
       marginVertical: 4,
-      gap: 20
+      gap: 16
     },
     ProductName: {
       color: colors.neutral.text,
@@ -221,8 +224,8 @@ const createStyles = (colors: ThemeColors) =>
       borderColor: colors.neutral.text,
       borderWidth: 1,
       borderRadius: 4,
-      width: 60,
-      height: 40,
+      width: 42,
+      height: 36,
       textAlign: 'center',
       color: colors.neutral.text
     },
@@ -247,7 +250,7 @@ const createStyles = (colors: ThemeColors) =>
       justifyContent: 'space-between',
       borderWidth: 1,
       borderColor: colors.complementary.danger,
-      borderRadius: 888
+      borderRadius: 4
     },
     DialogContent: {
       flexDirection: 'column',

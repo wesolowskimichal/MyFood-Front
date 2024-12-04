@@ -123,16 +123,19 @@ export type RootStackParamList = {
     product?: ProductDetails
     meal?: Meal
     fridge?: boolean
+    recipe?: boolean
   }
   ProductNotFound: {
     barcode: ProductBase['barcode']
     meal?: Meal
     fridge?: boolean
+    recipe?: boolean
   }
   AddProduct: {
     barcode?: string
     meal?: Meal
     fridge?: boolean
+    recipe?: boolean
   }
   AddRecipe: undefined
   Register: undefined

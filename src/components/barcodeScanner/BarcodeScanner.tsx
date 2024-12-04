@@ -136,7 +136,7 @@ const createStyles = (colors: ThemeColors) =>
     permissionButton: {
       backgroundColor: colors.accent,
       padding: 10,
-      borderRadius: 5
+      borderRadius: 4
     },
     permissionButtonText: {
       color: colors.neutral.text,

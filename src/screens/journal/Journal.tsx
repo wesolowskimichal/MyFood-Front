@@ -1,4 +1,4 @@
-import { Button, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator, Button, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useGetJournalsByDateQuery } from '../../redux/api/slices/JournalApiSlice'
 import { JournalMeal, JournalScreenProps, Nutrients, ThemeColors } from '../../types/Types'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -11,7 +11,8 @@ import NutrientsBar from '../../components/nutrientsBar/NutrientsBar'
 import { NutrientsCounterMap } from '../../helpers/NutrientsCounter'
 import Loader from '../../components/loader/Loader'
 import { getDate } from '../../helpers/GetDate'
-import DateTimePicker from '@react-native-community/datetimepicker'
+// import DateTimePicker from '@react-native-community/datetimepicker'
+import DateTimePicker from 'react-native-modal-datetime-picker'
 import FeatherIcon from 'react-native-vector-icons/Feather'
 import { toggleTheme } from '../../redux/slices/ThemeSlice'
 
@@ -95,14 +96,13 @@ const Journal = ({ navigation, route }: JournalScreenProps) => {
     setCarbs(prev => Math.floor(prev - carbsDiff))
   }, [])
 
-  const onDateChange = useCallback((_event: any, selectedDate?: Date) => {
+  const onDateChange = useCallback((selectedDate?: Date) => {
     setShowDatePicker(false)
     if (selectedDate) {
       setDate(selectedDate)
     }
   }, [])
 
-  if (journalEntriesLoading || journalEntriesFetching || mealsLoading || mealsFetching) return <Loader />
   if (journalEntriesError) return <Text>Fetching Journal Entries Error</Text>
   if (mealsError) return <Text>Fetching Meals Error</Text>
 
@@ -111,27 +111,40 @@ const Journal = ({ navigation, route }: JournalScreenProps) => {
   return (
     <ScreenWrapper>
       {/* // for theme tests only */}
-      <Button onPress={() => dispatch(toggleTheme())} title="Toggle Theme" />
-      <ScrollView style={styles.wrapper} nestedScrollEnabled>
-        <View style={styles.dateWrapper}>
-          <Pressable onPress={() => setShowDatePicker(true)} style={styles.date}>
-            <Text style={{ color: colors.neutral.text, fontWeight: 500 }}>
-              {dateStruct.day.toString().padStart(2, '0')}/{dateStruct.month.toString().padStart(2, '0')}/
-              {dateStruct.year}
-            </Text>
-            <FeatherIcon name="calendar" size={24} color={colors.accent} />
-          </Pressable>
+      {/* <Button onPress={() => dispatch(toggleTheme())} title="Toggle Theme" /> */}
+      {journalEntriesLoading || journalEntriesFetching || mealsLoading || mealsFetching ? (
+        <View style={{ width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator animating={true} color={colors.accent} size="large" />
         </View>
-        {showDatePicker && <DateTimePicker value={date} mode="date" display="default" onChange={onDateChange} />}
-        {journalMeals.map((journalMeal, index) => (
-          <Meal
-            key={`${journalMeal.meal.id}-${index}`}
-            journalMeal={journalMeal}
-            onNutrientsChange={handleOnNutrientsChange}
-            navigation={navigation}
+      ) : (
+        <ScrollView style={styles.wrapper} nestedScrollEnabled>
+          <View style={styles.dateWrapper}>
+            <Pressable onPress={() => setShowDatePicker(true)} style={styles.date}>
+              <Text style={{ color: colors.neutral.text, fontWeight: 500 }}>
+                {dateStruct.day.toString().padStart(2, '0')}/{dateStruct.month.toString().padStart(2, '0')}/
+                {dateStruct.year}
+              </Text>
+              <FeatherIcon name="calendar" size={24} color={colors.accent} />
+            </Pressable>
+          </View>
+          <DateTimePicker
+            isVisible={showDatePicker}
+            mode="date"
+            date={new Date(new Date().setHours(0, 0, 0, 0))}
+            onConfirm={data => onDateChange(data)}
+            onCancel={() => setShowDatePicker(false)}
           />
-        ))}
-      </ScrollView>
+
+          {journalMeals.map((journalMeal, index) => (
+            <Meal
+              key={`${journalMeal.meal.id}-${index}`}
+              journalMeal={journalMeal}
+              onNutrientsChange={handleOnNutrientsChange}
+              navigation={navigation}
+            />
+          ))}
+        </ScrollView>
+      )}
       <NutrientsBar proteins={proteins} fats={fats} carbs={carbs} />
     </ScreenWrapper>
   )
@@ -157,7 +170,7 @@ const createStyles = (colors: ThemeColors) =>
       gap: 8,
       borderWidth: 1,
       borderColor: colors.neutral.border,
-      borderRadius: 8
+      borderRadius: 4
     }
   })
 

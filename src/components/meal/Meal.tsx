@@ -157,7 +157,7 @@ const createStyles = (colors: ThemeColors) =>
       padding: 16,
       marginVertical: 8,
       marginHorizontal: 16,
-      borderRadius: 10,
+      borderRadius: 4,
       backgroundColor: colors.neutral.surface,
       shadowColor: colors.neutral.text,
       shadowOffset: { width: 0, height: 2 },

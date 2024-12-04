@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
-import { View, Text, TextInput, Button, ScrollView } from 'react-native'
+import { View, Text, TextInput, Button, ScrollView, Pressable } from 'react-native'
 import Animated, { SlideInLeft, SlideOutRight, LinearTransition } from 'react-native-reanimated'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/Store'
@@ -46,11 +46,10 @@ const StepCreator = ({ type, data, setData }: StepCreatorProps) => {
     if (type === 'edit' && setData) {
       setData(compiledSteps)
     }
-    console.log(compiledSteps)
   }, [steps, type])
 
   return (
-    <View style={{ flex: 1, padding: 16 }}>
+    <View style={{ flex: 1 }}>
       <ScrollView>
         {type === 'edit'
           ? steps.map((step, index) => (
@@ -62,11 +61,12 @@ const StepCreator = ({ type, data, setData }: StepCreatorProps) => {
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
-                  gap: 5,
+                  gap: 4,
                   marginBottom: 12,
-                  padding: 10,
+                  paddingVertical: 2,
+                  paddingHorizontal: 10,
                   backgroundColor: colors.neutral.surface,
-                  borderRadius: 8,
+                  borderRadius: 4,
                   borderColor: colors.neutral.border,
                   borderWidth: 1
                 }}
@@ -92,9 +92,10 @@ const StepCreator = ({ type, data, setData }: StepCreatorProps) => {
                 exiting={SlideOutRight}
                 style={{
                   marginBottom: 12,
-                  padding: 10,
+                  paddingVertical: 2,
+                  paddingHorizontal: 10,
                   backgroundColor: colors.neutral.surface,
-                  borderRadius: 8,
+                  borderRadius: 4,
                   borderColor: colors.neutral.border,
                   borderWidth: 1
                 }}
@@ -113,15 +114,34 @@ const StepCreator = ({ type, data, setData }: StepCreatorProps) => {
             placeholderTextColor={colors.neutral.text}
             style={{
               marginBottom: 12,
-              padding: 10,
+              paddingVertical: 2,
+              paddingHorizontal: 10,
               borderWidth: 1,
               borderColor: colors.neutral.border,
-              borderRadius: 8,
+              borderRadius: 4,
               color: colors.neutral.text,
-              backgroundColor: colors.neutral.surface
+              backgroundColor: colors.neutral.border
             }}
           />
-          <Button title="Add Step" color={colors.accent} onPress={addStep} />
+          <Pressable
+            onPress={addStep}
+            style={{
+              backgroundColor: colors.neutral.text,
+              borderRadius: 4
+            }}
+          >
+            <Text
+              style={{
+                color: colors.primary,
+                padding: 8,
+                textAlign: 'center',
+                fontSize: 16,
+                fontWeight: '600'
+              }}
+            >
+              ADD STEP
+            </Text>
+          </Pressable>
         </View>
       )}
     </View>

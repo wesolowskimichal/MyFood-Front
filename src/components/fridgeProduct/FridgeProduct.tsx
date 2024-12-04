@@ -16,6 +16,7 @@ import { RootState } from '../../redux/Store'
 import Dialog, { DialogContent } from '../dialog/Dialog'
 import Icon from 'react-native-vector-icons/Feather'
 import { useAppDispatch } from '../../hooks/useAppDispatch'
+import Animated, { LinearTransition, SlideInLeft, SlideOutRight } from 'react-native-reanimated'
 
 type FridgeProductProps = {
   fridgeProduct: Fridge
@@ -102,7 +103,12 @@ const FridgeProduct = ({ fridgeProduct, style, type = 'tile', onProductRemove, o
   }
 
   return (
-    <View style={[styles.productTile, style]}>
+    <Animated.View
+      style={[styles.productTile, style]}
+      layout={LinearTransition.springify()}
+      entering={SlideInLeft}
+      exiting={SlideOutRight}
+    >
       {(isPatchingPoduct || isRemovingFridgeProduct) && <UpperLoader />}
       {type === 'tile' ? <_FridgeProductTile {...productViewProps} /> : <_FridgeProductList {...productViewProps} />}
       {isRemoveProductDialogVisible && (
@@ -127,7 +133,7 @@ const FridgeProduct = ({ fridgeProduct, style, type = 'tile', onProductRemove, o
           </DialogContent>
         </Dialog>
       )}
-    </View>
+    </Animated.View>
   )
 }
 
@@ -137,10 +143,10 @@ const createStyles = (colors: ThemeColors) =>
       position: 'relative',
       flexDirection: 'column',
       alignItems: 'center',
-      width: '100%',
+      flex: 1,
       height: 'auto',
       borderWidth: 1,
-      borderRadius: 15,
+      borderRadius: 4,
       borderColor: colors.neutral.border,
       backgroundColor: colors.neutral.surface,
       shadowColor: '#000',
@@ -149,8 +155,7 @@ const createStyles = (colors: ThemeColors) =>
       shadowRadius: 4,
       elevation: 5,
       justifyContent: 'space-between',
-      overflow: 'hidden',
-      padding: 5
+      overflow: 'hidden'
     },
     DialogContent: {
       flexDirection: 'column',

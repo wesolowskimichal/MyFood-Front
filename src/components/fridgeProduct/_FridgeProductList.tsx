@@ -9,7 +9,8 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
-  runOnJS
+  runOnJS,
+  LinearTransition
 } from 'react-native-reanimated'
 import Icon from 'react-native-vector-icons/Feather'
 import { useSelector } from 'react-redux'
@@ -55,7 +56,12 @@ const _FridgeProductList = ({
   }
 
   return (
-    <Animated.View style={styles.productItem} entering={SlideInLeft}>
+    <Animated.View
+      style={styles.productItem}
+      layout={LinearTransition.springify()}
+      entering={SlideInLeft}
+      exiting={SlideOutRight}
+    >
       <Image source={{ uri: picture }} style={styles.productImage} />
       <View style={styles.productInfo}>
         <Text style={styles.productName}>{name}</Text>
@@ -88,14 +94,14 @@ const createStyles = (colors: ThemeColors) =>
     productItem: {
       flexDirection: 'row',
       alignItems: 'center',
-      borderRadius: 12,
+      borderRadius: 4,
       alignSelf: 'center',
       paddingHorizontal: 6
     },
     productImage: {
       width: 60,
       height: 60,
-      borderRadius: 10,
+      borderRadius: 4,
       marginRight: 12
     },
     productInfo: {
@@ -114,11 +120,11 @@ const createStyles = (colors: ThemeColors) =>
       gap: 10
     },
     amountInput: {
-      borderColor: colors.neutral.border,
+      borderColor: colors.neutral.text,
       borderWidth: 1,
-      borderRadius: 8,
-      height: 40,
-      width: 60,
+      borderRadius: 4,
+      width: 42,
+      height: 36,
       textAlign: 'center',
       color: colors.neutral.text,
       backgroundColor: colors.neutral.surface
@@ -128,7 +134,7 @@ const createStyles = (colors: ThemeColors) =>
       alignItems: 'center',
       backgroundColor: '#CD5C5C',
       padding: 12,
-      borderRadius: 8
+      borderRadius: 4
     }
   })
 

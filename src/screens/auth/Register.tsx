@@ -1,11 +1,9 @@
 import React from 'react'
-import { useDispatch, useSelector } from 'react-redux'
+import { useSelector } from 'react-redux'
 import { RegisterScreenProps, ThemeColors, User } from '../../types/Types'
 import { useState, useMemo } from 'react'
 import { api } from '../../services/Api'
-import { setAuth } from '../../redux/slices/AuthSlice'
 import {
-  Button,
   TextInput,
   View,
   Text,
@@ -24,7 +22,6 @@ import { Link } from '@react-navigation/native'
 import Loader from '../../components/loader/Loader'
 
 const Register = ({ navigation, route: _route }: RegisterScreenProps) => {
-  const dispatch = useDispatch()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [email, setEmail] = useState('')
@@ -128,6 +125,26 @@ const Register = ({ navigation, route: _route }: RegisterScreenProps) => {
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Text style={styles.title}>Register</Text>
+        <View style={{ justifyContent: 'center', alignItems: 'center', marginBottom: 24 }}>
+          <Image
+            source={picture ? { uri: picture } : require('../../assets/images/user-default.jpg')}
+            style={styles.image}
+          />
+          <Pressable
+            onPress={pickImage}
+            style={{
+              paddingVertical: 4,
+              paddingHorizontal: 16,
+              borderRadius: 4,
+              borderWidth: 1,
+              borderColor: colors.accent,
+              justifyContent: 'center',
+              alignItems: 'center'
+            }}
+          >
+            <Text style={styles.imagePickerText}>Select Image</Text>
+          </Pressable>
+        </View>
         {inputErrors.username && <Text style={styles.errorText}>{inputErrors.username}</Text>}
         <TextInput
           style={[styles.input, inputErrors.username ? styles.inputError : {}]}
@@ -163,17 +180,19 @@ const Register = ({ navigation, route: _route }: RegisterScreenProps) => {
         />
         {inputErrors.last_name && <Text style={styles.errorText}>{inputErrors.last_name}</Text>}
         <TextInput
-          style={[styles.input, inputErrors.last_name ? styles.inputError : {}]}
+          style={[styles.input, { marginBottom: 24 }, inputErrors.last_name ? styles.inputError : {}]}
           placeholder="Last Name"
           value={lastName}
           onChangeText={setLastName}
           placeholderTextColor={colors.neutral.border}
         />
-        <Pressable onPress={pickImage}>
-          <Text style={styles.imagePickerText}>Pick an image</Text>
+
+        <Pressable
+          onPress={handleRegister}
+          style={{ backgroundColor: colors.accent, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 4 }}
+        >
+          <Text style={{ color: colors.primary, fontWeight: '600' }}>REGISTER</Text>
         </Pressable>
-        {picture && <Image source={{ uri: picture }} style={styles.image} />}
-        <Button title="Register" onPress={handleRegister} color={colors.accent} />
         {error && Object.keys(inputErrors).length === 0 && <Text style={styles.errorText}>{error}</Text>}
         <View style={styles.loginContainer}>
           <Text style={styles.loginInfoText}>
@@ -207,7 +226,8 @@ const createStyles = (colors: ThemeColors) =>
     },
     input: {
       width: '100%',
-      padding: 10,
+      paddingVertical: 8,
+      paddingHorizontal: 12,
       marginBottom: 12,
       borderWidth: 1,
       borderColor: colors.neutral.border,
@@ -219,13 +239,12 @@ const createStyles = (colors: ThemeColors) =>
       borderColor: colors.complementary.danger
     },
     imagePickerText: {
-      color: colors.accent,
-      marginBottom: 12
+      color: colors.accent
     },
     image: {
       width: 100,
       height: 100,
-      borderRadius: 50,
+      borderRadius: 4,
       marginBottom: 12
     },
     errorText: {

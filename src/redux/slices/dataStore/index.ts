@@ -12,6 +12,7 @@ type addStoreBody = {
 type addBody = {
   storeName: string
   data: unknown
+  key?: string
 }
 
 type editBody = {
@@ -37,6 +38,9 @@ const dataStoreSlice = createSlice({
     add(state, action: PayloadAction<addBody>) {
       const store = state[action.payload.storeName]
       if (store) {
+        if (action.payload.key && store.deleted.includes(action.payload.key)) {
+          store.deleted = store.deleted.filter(key => key !== action.payload.key)
+        }
         store.added.push(action.payload.data)
       }
     },
@@ -44,6 +48,7 @@ const dataStoreSlice = createSlice({
       const store = state[action.payload.storeName]
       if (store) {
         store.edited[action.payload.data.key] = action.payload.data.value
+        console.log(store.edited)
       }
     },
     del(state, action: PayloadAction<delBody>) {

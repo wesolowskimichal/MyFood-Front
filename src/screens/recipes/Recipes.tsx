@@ -1,7 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { FlatList, StyleSheet, Text, View, TextInput, Pressable } from 'react-native'
-import { RecipesScreenProps, ThemeColors, Recipe as IRecipe } from '../../types/Types'
-import { useGetRecipesQuery, useRemoveRecipeMutation } from '../../redux/api/slices/RecipeApiSlice'
+import { RecipesScreenProps, ThemeColors, Recipe as IRecipe, Recipe } from '../../types/Types'
+import {
+  useGetRecipesQuery,
+  useLikeRecipeMutation,
+  useRemoveRecipeMutation
+} from '../../redux/api/slices/RecipeApiSlice'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/Store'
 import ListItemSkeleton from '../../components/listItemSkeleton/ListItemSkeleton'
@@ -13,10 +17,10 @@ import Loader from '../../components/loader/Loader'
 import UpperLoader from '../../components/upperLoader/UpperLoader'
 import { useAppDispatch } from '../../hooks/useAppDispatch'
 import RecipeItem from '../../components/recipeItem/RecipeItem'
+import { useDataQuery } from '../../redux/slices/dataStore/hooks/useDataQuery'
+import Animated, { LinearTransition, SlideInLeft, SlideOutRight } from 'react-native-reanimated'
 
 const Recipes = ({ navigation }: RecipesScreenProps) => {
-  const dispatch = useAppDispatch()
-
   const colors = useSelector((state: RootState) => state.theme.colors)
   const styles = useMemo(() => createStyles(colors), [colors])
 
@@ -26,7 +30,9 @@ const Recipes = ({ navigation }: RecipesScreenProps) => {
     name: undefined
   })
 
-  const [deletedRecipes, setDeletedRecipes] = useState<string[]>([])
+  const { added, edited, deleted, isEdited, getEdited, isDeleted, items } = useDataQuery<Recipe, Partial<Recipe>>({
+    storeName: 'Recipes'
+  })
   const [viewType, setViewType] = useState<'tile' | 'list'>('tile')
   const [page, setPage] = useState(1)
 
@@ -36,12 +42,7 @@ const Recipes = ({ navigation }: RecipesScreenProps) => {
     isFetching
   } = useGetRecipesQuery({ page, filters })
 
-  const [removeRecipe] = useRemoveRecipeMutation()
-
-  const recipes = useMemo(
-    () => recipesApi.filter(recipe => !deletedRecipes.includes(recipe.id)),
-    [recipesApi, deletedRecipes]
-  )
+  const recipes = useMemo(() => items('id', recipesApi), [items, recipesApi])
 
   const handleLoadMoreRecipes = useCallback(() => {
     if (!isFetching && !isFinished) {
@@ -49,23 +50,10 @@ const Recipes = ({ navigation }: RecipesScreenProps) => {
     }
   }, [isFetching, recipes])
 
-  const handleRemoveRecipe = useCallback(
-    async (id: string) => {
-      try {
-        await removeRecipe(id)
-        setDeletedRecipes(prevRecipes => [...prevRecipes, id])
-      } catch (error) {
-        console.error(error)
-      }
-    },
-    [dispatch]
-  )
-
-  const handleLikeRecipe = useCallback((id: string) => {}, [])
-
-  const renderItem = ({ item }: { item: IRecipe }) => (
-    <RecipeItem recipe={item} onLikeToggle={handleLikeRecipe} onRecipeRemove={handleRemoveRecipe} />
-  )
+  const renderItem = ({ item }: { item: IRecipe }) => {
+    console.log({ renderITem: item.id })
+    return <RecipeItem key={item.id} recipe={item} type={viewType} />
+  }
 
   const handleSwitchToggle = useCallback(() => {
     setViewType(prevType => (prevType === 'tile' ? 'list' : 'tile'))
@@ -86,23 +74,39 @@ const Recipes = ({ navigation }: RecipesScreenProps) => {
 
   return (
     <ScreenWrapper>
-      <View style={styles.searchRow}>
-        <TextInput
-          style={styles.input}
-          value={filters.name}
-          onChangeText={text => setFilters({ ...filters, name: text })}
-          placeholder="Search recipe"
-          placeholderTextColor={colors.neutral.text}
-        />
-        <EmbeddedSwitch
-          leftOption={
-            <Icon name="grid" size={20} color={viewType === 'tile' ? colors.accent : colors.neutral.border} />
-          }
-          rightOption={
-            <Icon name="list" size={20} color={viewType === 'list' ? colors.accent : colors.neutral.border} />
-          }
-          onSwitchToggle={handleSwitchToggle}
-        />
+      <View>
+        <View style={styles.searchRow}>
+          <TextInput
+            style={styles.input}
+            value={filters.name}
+            onChangeText={text => setFilters({ ...filters, name: text })}
+            placeholder="Search recipe"
+            placeholderTextColor={colors.neutral.text}
+          />
+          <EmbeddedSwitch
+            leftOption={
+              <Icon name="grid" size={20} color={viewType === 'tile' ? colors.accent : colors.neutral.border} />
+            }
+            rightOption={
+              <Icon name="list" size={20} color={viewType === 'list' ? colors.accent : colors.neutral.border} />
+            }
+            onSwitchToggle={handleSwitchToggle}
+          />
+        </View>
+        {viewType === 'list' && (
+          <Pressable
+            onPress={handleOnAddRecipeClick}
+            style={{
+              backgroundColor: colors.accent,
+              paddingVertical: 8,
+              marginHorizontal: 36,
+              borderRadius: 4,
+              marginBottom: 8
+            }}
+          >
+            <Text style={{ textAlign: 'center', color: colors.primary, fontWeight: '600' }}>ADD RECIPE</Text>
+          </Pressable>
+        )}
       </View>
       {isFetching && <UpperLoader />}
       {!isFetching && !isLoading && recipes.length === 0 ? (
@@ -122,21 +126,34 @@ const Recipes = ({ navigation }: RecipesScreenProps) => {
           </View>
         </View>
       ) : (
-        <FlatList
-          key={viewType}
-          data={recipes}
-          numColumns={viewType === 'tile' ? 2 : 1}
-          style={{ paddingHorizontal: 5 }}
-          renderItem={renderItem}
-          keyExtractor={item => item.id.toString()}
-          onEndReached={handleLoadMoreRecipes}
-          onEndReachedThreshold={0.5}
-          ListFooterComponent={isFinished ? null : <ListItemSkeleton width="100%" height={100} borderRadius={10} />}
-        />
+        <Animated.View
+          entering={SlideInLeft}
+          exiting={SlideOutRight}
+          style={{
+            flex: 1,
+            padding: 4
+          }}
+        >
+          <FlatList
+            key={viewType}
+            data={recipes}
+            numColumns={viewType === 'tile' ? 2 : 1}
+            style={{ paddingHorizontal: 5 }}
+            renderItem={renderItem}
+            keyExtractor={item => item.id}
+            onEndReached={handleLoadMoreRecipes}
+            onEndReachedThreshold={0.5}
+            contentContainerStyle={{ gap: 10 }}
+            columnWrapperStyle={viewType === 'tile' && { gap: 10 }}
+            ListFooterComponent={isFinished ? null : <ListItemSkeleton width="100%" height={100} borderRadius={4} />}
+          />
+        </Animated.View>
       )}
-      <Pressable style={styles.addRecipeIconButton} onPress={handleOnAddRecipeClick}>
-        <MaterialIcon name="add" size={32} color={colors.accent} />
-      </Pressable>
+      {viewType === 'tile' && (
+        <Pressable style={styles.addRecipeIconButton} onPress={handleOnAddRecipeClick}>
+          <MaterialIcon name="add" size={32} color={colors.accent} />
+        </Pressable>
+      )}
     </ScreenWrapper>
   )
 }
@@ -155,7 +172,7 @@ const createStyles = (colors: ThemeColors) =>
       borderColor: colors.neutral.border,
       color: colors.neutral.text,
       borderWidth: 1,
-      borderRadius: 8,
+      borderRadius: 4,
       padding: 10,
       marginRight: 10
     },
@@ -170,7 +187,7 @@ const createStyles = (colors: ThemeColors) =>
       borderColor: colors.accent,
       borderWidth: 1,
       padding: 4,
-      borderRadius: 10
+      borderRadius: 4
     },
     noRecipes: {
       flex: 1,

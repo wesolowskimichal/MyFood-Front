@@ -17,19 +17,21 @@ type GetRecipesResponse = {
   isFinished: boolean
 }
 
-type MutateRecipeBody = {
-  name: string
-  description: string
-  products: {
-    product_id: string
-    amount_needed: number
-  }[]
-  preparation: string
-  time: string
-  difficulty: 'easy' | 'medium' | 'hard'
-  servings: number
-  picture?: string
-}
+type MutateRecipeBody =
+  | {
+      name: string
+      description: string
+      products: {
+        product_id: string
+        amount_needed: number
+      }[]
+      preparation: string
+      time: string
+      difficulty: 'easy' | 'medium' | 'hard'
+      servings: number
+      picture?: string
+    }
+  | FormData
 
 export const recipeApiSlice = createApi({
   reducerPath: 'recipeApi',
@@ -88,11 +90,28 @@ export const recipeApiSlice = createApi({
         return currentArg?.page !== previousArg?.page
       }
     }),
+    likeRecipe: builder.mutation<Recipe, string>({
+      query: id => ({
+        url: `api/recipe/like/${id}`,
+        method: 'POST'
+      }),
+      onQueryStarted(_recipe, { dispatch, queryFulfilled }) {
+        queryFulfilled.then(({ data }) => {
+          dispatch(
+            recipeApiSlice.util.updateQueryData('getRecipes', { page: 1 }, draft => {
+              const index = draft.recipes.findIndex(recipe => recipe.id === data.id)
+              draft.recipes[index] = data
+            })
+          )
+        })
+      }
+    }),
     addRecipe: builder.mutation<Recipe, MutateRecipeBody>({
       query: recipe => ({
         url: 'api/recipes/',
         method: 'POST',
-        body: recipe
+        body: recipe,
+        headers: recipe instanceof FormData ? {} : { 'Content-Type': 'application/json' }
       }),
       onQueryStarted(_recipe, { dispatch, queryFulfilled }) {
         queryFulfilled.then(({ data }) => {
@@ -105,12 +124,12 @@ export const recipeApiSlice = createApi({
       }
     }),
     getRecipeById: builder.query<Recipe, string>({
-      query: id => `api/recipes/${id}/`,
+      query: id => `api/recipe/${id}/`,
       providesTags: recipe => (recipe ? [{ type: 'Recipe', id: recipe.id }] : [])
     }),
     patchRecipe: builder.query<Recipe, Partial<MutateRecipeBody> & { id: string }>({
       query: ({ id, ...recipe }) => ({
-        url: `api/recipes/${id}/`,
+        url: `api/recipe/${id}/`,
         method: 'PATCH',
         body: recipe
       }),
@@ -127,7 +146,7 @@ export const recipeApiSlice = createApi({
     }),
     removeRecipe: builder.mutation<void, string>({
       query: id => ({
-        url: `api/recipes/${id}/`,
+        url: `api/recipe/${id}/`,
         method: 'DELETE'
       }),
       invalidatesTags: (_result, _error, id) => [
@@ -143,5 +162,6 @@ export const {
   useAddRecipeMutation,
   useGetRecipeByIdQuery,
   usePatchRecipeQuery,
+  useLikeRecipeMutation,
   useRemoveRecipeMutation
 } = recipeApiSlice

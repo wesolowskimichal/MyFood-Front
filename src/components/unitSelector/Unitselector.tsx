@@ -1,4 +1,4 @@
-import { DimensionValue, Pressable, StyleSheet, Text } from 'react-native'
+import { DimensionValue, Pressable, StyleProp, StyleSheet, Text, ViewStyle } from 'react-native'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/Store'
 import { useMemo } from 'react'
@@ -10,17 +10,19 @@ type UnitSelectorProps = {
   avaibleUnits: Unit[] | '__all__'
   setUnit: (unit: Unit) => void
   width?: DimensionValue
+  style?: StyleProp<ViewStyle>
+  triggerStyle?: StyleProp<ViewStyle>
 }
 
-const UnitSelector = ({ unit, avaibleUnits, setUnit, width }: UnitSelectorProps) => {
+const UnitSelector = ({ unit, avaibleUnits, setUnit, width, style, triggerStyle }: UnitSelectorProps) => {
   const colors = useSelector((state: RootState) => state.theme.colors)
   const styles = useMemo(() => createStyles(colors, width), [colors, width])
 
   const _avaibleUnits: Unit[] = avaibleUnits === '__all__' ? ['g', 'kg', 'ml', 'l'] : avaibleUnits
 
   return (
-    <EmbeddedDialog style={styles.DialogContainer}>
-      <DialogTrigger style={styles.DialogTrigger}>
+    <EmbeddedDialog style={[styles.DialogContainer, style]}>
+      <DialogTrigger style={[styles.DialogTrigger, triggerStyle]}>
         <Text style={styles.UnitText}>{unit}</Text>
       </DialogTrigger>
       <DialogContent style={styles.DialogContent}>
@@ -48,11 +50,11 @@ const createStyles = (colors: ThemeColors, width?: DimensionValue) =>
       justifyContent: 'flex-end'
     },
     DialogTrigger: {
-      borderColor: colors.neutral.border,
+      borderColor: colors.neutral.text,
       borderWidth: 1,
       borderRadius: 4,
-      width: width ?? 60,
-      height: 40,
+      width: width ?? 42,
+      height: 36,
       textAlign: 'center',
       color: colors.neutral.text,
       alignItems: 'center',

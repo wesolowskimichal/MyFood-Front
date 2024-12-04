@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { api } from '../../services/Api'
 import { LoginScreenProps, ThemeColors, Token__FULL } from '../../types/Types'
 import { setAuth } from '../../redux/slices/AuthSlice'
-import { Button, TextInput, View, Text, StyleSheet } from 'react-native'
+import { Button, TextInput, View, Text, StyleSheet, Pressable } from 'react-native'
 import { RootState } from '../../redux/Store'
 import { Link } from '@react-navigation/native'
 import { AxiosError } from 'axios'
@@ -75,7 +75,12 @@ const Login = ({ navigation: _navigation, route }: LoginScreenProps) => {
         secureTextEntry
         placeholderTextColor={colors.neutral.border}
       />
-      <Button title="Login" onPress={handleLogin} color={colors.accent} />
+      <Pressable
+        onPress={handleLogin}
+        style={{ backgroundColor: colors.accent, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 4 }}
+      >
+        <Text style={{ color: colors.primary, fontWeight: '600' }}>LOGIN</Text>
+      </Pressable>
       {error && <Text style={styles.errorText}>{error}</Text>}
       <View style={styles.registerContainer}>
         <Text style={styles.registerInfoText}>
@@ -106,7 +111,8 @@ const createStyles = (colors: ThemeColors) =>
     },
     input: {
       width: '100%',
-      padding: 10,
+      paddingVertical: 8,
+      paddingHorizontal: 12,
       marginBottom: 12,
       borderWidth: 1,
       borderColor: colors.neutral.border,

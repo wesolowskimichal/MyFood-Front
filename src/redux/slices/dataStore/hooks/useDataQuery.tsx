@@ -34,11 +34,11 @@ export const useDataQuery = <TA, TE = TA>({ storeName }: DataQuery) => {
   }, [dispatch, store, storeName])
 
   const addItem = useCallback(
-    (item: TA) => {
+    (item: TA, key?: string) => {
       if (!store) {
         initializeStore()
       }
-      dispatch(add({ storeName, data: item }))
+      dispatch(add({ storeName, data: item, key }))
     },
     [dispatch, store, storeName]
   )
@@ -85,5 +85,24 @@ export const useDataQuery = <TA, TE = TA>({ storeName }: DataQuery) => {
     [dispatch, store, storeName]
   )
 
-  return { ...data, addItem, editItem, isEdited, getEdited, deleteItem, isDeleted }
+  const items = useMemo(
+    () => (id: keyof TA, external?: TA[]) => {
+      const combinedProducts = external ? [...data.added, ...external] : data.added
+
+      const productMap = new Map()
+      combinedProducts.forEach(item => {
+        if (isEdited(item[id] as string)) {
+          item = { ...item, ...getEdited(item[id] as string) }
+        }
+        if (!isDeleted(item[id] as string)) {
+          productMap.set(item[id], item)
+        }
+      })
+
+      return Array.from(productMap.values())
+    },
+    [store, data, isEdited, getEdited, isDeleted]
+  )
+
+  return { ...data, addItem, editItem, isEdited, getEdited, deleteItem, isDeleted, items }
 }

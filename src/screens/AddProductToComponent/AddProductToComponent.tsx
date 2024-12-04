@@ -18,10 +18,15 @@ const AddProductToComponent = ({ navigation, route }: AddProductToComponentScree
   const navProduct = route.params?.product ?? null
   const navMeal = route.params.meal
   const navFridge = route.params.fridge
-  const storeName = navFridge ? 'Fridge' : 'Journal'
-  const { addItem, editItem, deleteItem } = useDataQuery({
+  const navRecipe = route.params.recipe
+  const storeName = navMeal ? 'Journal' : navFridge ? 'Fridge' : 'ProductInsert'
+  // const storeName = navFridge ? 'Fridge' : 'Journal'
+  console.log({ storeName })
+  const { addItem } = useDataQuery({
     storeName
   })
+
+  console.log({ navFridge, navMeal, navRecipe })
 
   const handleProductScan = useCallback(
     async (barcode: BarcodeScanningResult) => {
@@ -30,13 +35,15 @@ const AddProductToComponent = ({ navigation, route }: AddProductToComponentScree
         navigation.navigate('AddProductToComponent', {
           product: response,
           meal: navMeal,
-          fridge: navFridge
+          fridge: navFridge,
+          recipe: navRecipe
         })
       } catch (error) {
         navigation.navigate('ProductNotFound', {
           barcode: barcode.data,
           meal: navMeal,
-          fridge: navFridge
+          fridge: navFridge,
+          recipe: navRecipe
         })
       }
     },
@@ -45,7 +52,8 @@ const AddProductToComponent = ({ navigation, route }: AddProductToComponentScree
 
   const handleOnSubmit = useCallback(
     async (amount: number, unit: Unit) => {
-      if (!navProduct || !(navMeal || navFridge)) return
+      console.log({ navMeal, navFridge, navRecipe })
+      if (!navProduct || !(navMeal || navFridge || navRecipe)) return
       try {
         if (navMeal) {
           await addProductToJournal({
@@ -61,21 +69,32 @@ const AddProductToComponent = ({ navigation, route }: AddProductToComponentScree
             product: navProduct,
             current_amount: UnitProductConverter(amount, unit, navProduct)
           }).unwrap()
-          addItem({
-            id,
-            product: navProduct,
-            current_amount: UnitProductConverter(amount, unit, navProduct),
-            threshold: 0,
-            is_on_shopping_list: false
-          })
-          // navOnFridgeAdd?.(navProduct, UnitProductConverter(amount, unit, navProduct), id)
+          addItem(
+            {
+              id,
+              product: navProduct,
+              current_amount: UnitProductConverter(amount, unit, navProduct),
+              threshold: 0,
+              is_on_shopping_list: false
+            },
+            id
+          )
           navigation.navigate('Fridge')
+        } else if (navRecipe) {
+          addItem(
+            {
+              product: navProduct,
+              amount_needed: UnitProductConverter(amount, unit, navProduct)
+            },
+            navProduct.id
+          )
+          navigation.navigate('AddRecipe')
         }
       } catch (error) {
         console.error(error)
       }
     },
-    [navProduct, navMeal]
+    [navProduct, navMeal, navRecipe]
   )
 
   if (isProductLoading || isAddingProductToJournal || isAddingProductToFridge || isProductFetching) {
