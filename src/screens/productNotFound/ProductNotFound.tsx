@@ -93,7 +93,7 @@ const ProductNotFound = ({ navigation, route }: ProductNotFoundScreenProps) => {
           placeholderTextColor={colors.neutral.text}
         />
         <Pressable
-          onPress={() => navigation.navigate('AddProduct', { barcode, meal, fridge })}
+          onPress={() => navigation.navigate('AddProduct', { barcode, meal, fridge, recipe })}
           style={{
             backgroundColor: colors.neutral.surface,
             padding: 16,

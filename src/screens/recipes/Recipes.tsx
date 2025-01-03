@@ -30,7 +30,7 @@ const Recipes = ({ navigation }: RecipesScreenProps) => {
     name: undefined
   })
 
-  const { added, edited, deleted, isEdited, getEdited, isDeleted, items } = useDataQuery<Recipe, Partial<Recipe>>({
+  const { items } = useDataQuery<Recipe, Partial<Recipe>>({
     storeName: 'Recipes'
   })
   const [viewType, setViewType] = useState<'tile' | 'list'>('tile')

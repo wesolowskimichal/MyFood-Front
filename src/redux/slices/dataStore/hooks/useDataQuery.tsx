@@ -1,7 +1,7 @@
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '../../../Store'
 import { useCallback, useMemo } from 'react'
-import { addStore, add, del, edit } from '..'
+import { addStore, clearStore, add, del, edit } from '..'
 
 type DataQuery = {
   storeName: string
@@ -85,6 +85,10 @@ export const useDataQuery = <TA, TE = TA>({ storeName }: DataQuery) => {
     [dispatch, store, storeName]
   )
 
+  const cleanUp = useCallback(() => {
+    dispatch(clearStore(storeName))
+  }, [])
+
   const items = useMemo(
     () => (id: keyof TA, external?: TA[]) => {
       const combinedProducts = external ? [...data.added, ...external] : data.added
@@ -104,5 +108,5 @@ export const useDataQuery = <TA, TE = TA>({ storeName }: DataQuery) => {
     [store, data, isEdited, getEdited, isDeleted]
   )
 
-  return { ...data, addItem, editItem, isEdited, getEdited, deleteItem, isDeleted, items }
+  return { ...data, addItem, cleanUp, editItem, isEdited, getEdited, deleteItem, isDeleted, items }
 }

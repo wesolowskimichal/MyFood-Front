@@ -1,12 +1,12 @@
 import React, { useMemo, useEffect, useState } from 'react'
-import { View, Text, TextInput, Button, Switch, StyleSheet, Pressable } from 'react-native'
+import { View, Text, TextInput, Switch, StyleSheet, Pressable } from 'react-native'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Animated, { useSharedValue, withTiming, useAnimatedStyle } from 'react-native-reanimated'
 import { z } from 'zod'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/Store'
-import { AddRecipeScreenProps, ThemeColors } from '../../types/Types'
+import { AddRecipeScreenProps, Recipe, ThemeColors } from '../../types/Types'
 import StepCreator from '../../components/stepCreator/StepCreator'
 import DateTimePickerModal from 'react-native-modal-datetime-picker'
 import ProductInserter from '../../components/productInserter/ProductInserter'
@@ -14,20 +14,22 @@ import { useAddRecipeMutation } from '../../redux/api/slices/RecipeApiSlice'
 import * as ImagePicker from 'expo-image-picker'
 import * as ImageManipulator from 'expo-image-manipulator'
 import { Image } from 'expo-image'
-import * as FileSystem from 'expo-file-system'
+import { useDataQuery } from '../../redux/slices/dataStore/hooks/useDataQuery'
 
 const recipeSchema = z.object({
   name: z.string().min(1, { message: 'Name is required' }),
   description: z.string().min(1, { message: 'Description is required' }),
   shared: z.boolean(),
-  products: z.array(
-    z.object({
-      product_id: z.string(),
-      amount_needed: z.number().min(1, { message: 'Amount needed must be greater than 0' })
-    })
-  ),
-  preparation: z.string(),
-  time: z.string(),
+  products: z
+    .array(
+      z.object({
+        product_id: z.string(),
+        amount_needed: z.number().min(1, { message: 'Amount needed must be greater than 0' })
+      })
+    )
+    .min(1, { message: 'At least one product is required' }),
+  preparation: z.string().min(1, { message: 'Preparation is required' }),
+  time: z.string().min(1, { message: 'Cooking time is required' }),
   difficulty: z.enum(['easy', 'medium', 'hard'], { message: 'Difficulty must be set' }),
   servings: z.number().min(1, { message: 'Servings must be greater than 0' }),
   picture: z.string().optional()
@@ -37,6 +39,13 @@ type recipeType = z.infer<typeof recipeSchema>
 
 const AddRecipe = ({ navigation }: AddRecipeScreenProps) => {
   const [addRecipe, { isLoading: isAddRecipeLoading, isError: isAddRecipeError }] = useAddRecipeMutation()
+  const [picture, setPicture] = useState<File | null>(null)
+  const { addItem } = useDataQuery<Recipe, Partial<Recipe>>({
+    storeName: 'Recipes'
+  })
+  const { cleanUp } = useDataQuery({
+    storeName: 'ProductInsert'
+  })
   const colors = useSelector((state: RootState) => state.theme.colors)
   const styles = useMemo(() => createStyles(colors), [colors])
 
@@ -82,6 +91,10 @@ const AddRecipe = ({ navigation }: AddRecipeScreenProps) => {
 
   useEffect(() => {
     slideValue.value = 0
+
+    return () => {
+      cleanUp()
+    }
   }, [])
 
   const getAnimatedDifficultyStyles = (levelIndex: number) => {
@@ -128,23 +141,23 @@ const AddRecipe = ({ navigation }: AddRecipeScreenProps) => {
         [{ resize: { width: 300, height: 300 } }],
         { compress: 1, format: ImageManipulator.SaveFormat.JPEG }
       )
+
+      const file = {
+        uri: manipResult.uri,
+        type: 'image/jpeg',
+        name: 'recipe-picture.jpg'
+      } as unknown as File
+      setPicture(file)
       onChange(manipResult.uri)
     }
   }
 
   const onSubmit = async (data: any) => {
-    const payload: recipeType = { ...data }
-
-    if (data.picture) {
-      const base64Image = await FileSystem.readAsStringAsync(data.picture, { encoding: 'base64' })
-      payload.picture = `data:image/jpeg;base64,${base64Image}`
-    } else {
-      delete payload.picture
-    }
-    console.log(payload)
     try {
-      await addRecipe(payload).unwrap()
-      navigation.goBack()
+      const recipe: recipeType = { ...data, picture: picture }
+      delete recipe.picture
+      const response = await addRecipe(recipe).unwrap()
+      addItem(response)
     } catch (error) {
       console.error('Error adding recipe:', error)
     }
@@ -209,8 +222,11 @@ const AddRecipe = ({ navigation }: AddRecipeScreenProps) => {
             control={control}
             render={({ field: { onChange, value } }) => (
               <>
-                <Text style={styles.label}>Description</Text>
+                <Text style={[styles.label, errors.description && { color: colors.complementary.danger }]}>
+                  Description
+                </Text>
                 <TextInput style={[styles.input, { minHeight: 64 }]} onChangeText={onChange} value={value} multiline />
+                {errors.description && <Text style={styles.errorText}>{errors.description.message as string}</Text>}
               </>
             )}
           />
@@ -318,16 +334,19 @@ const AddRecipe = ({ navigation }: AddRecipeScreenProps) => {
               </>
             )}
           />
-          <Text style={[styles.label, errors.time && { color: colors.complementary.danger }]}>Preparation steps</Text>
+          <Text style={[styles.label, errors.preparation && { color: colors.complementary.danger }]}>
+            Preparation steps
+          </Text>
           <Controller
             name="preparation"
             control={control}
             render={({ field: { onChange } }) => <StepCreator type="edit" setData={onChange} />}
           />
+          {errors.preparation && <Text style={styles.errorText}>{errors.preparation.message as string}</Text>}
         </View>
       </Animated.View>
       <Animated.View style={styles.section}>
-        <Text style={styles.sectionHeader}>Products</Text>
+        <Text style={[styles.label, errors.products && { color: colors.complementary.danger }]}>Products</Text>
         <View style={{ padding: 8 }}>
           <Controller
             name="products"
@@ -336,6 +355,7 @@ const AddRecipe = ({ navigation }: AddRecipeScreenProps) => {
               <ProductInserter type="add" setData={onChange} navigation={navigation} />
             )}
           />
+          {errors.products && <Text style={styles.errorText}>{errors.products.message as string}</Text>}
         </View>
       </Animated.View>
       <Pressable

@@ -20,13 +20,9 @@ const AddProductToComponent = ({ navigation, route }: AddProductToComponentScree
   const navFridge = route.params.fridge
   const navRecipe = route.params.recipe
   const storeName = navMeal ? 'Journal' : navFridge ? 'Fridge' : 'ProductInsert'
-  // const storeName = navFridge ? 'Fridge' : 'Journal'
-  console.log({ storeName })
   const { addItem } = useDataQuery({
     storeName
   })
-
-  console.log({ navFridge, navMeal, navRecipe })
 
   const handleProductScan = useCallback(
     async (barcode: BarcodeScanningResult) => {
@@ -47,7 +43,7 @@ const AddProductToComponent = ({ navigation, route }: AddProductToComponentScree
         })
       }
     },
-    [getProduct, navigation]
+    [getProduct, navigation, navMeal, navFridge, navRecipe]
   )
 
   const handleOnSubmit = useCallback(
@@ -94,7 +90,7 @@ const AddProductToComponent = ({ navigation, route }: AddProductToComponentScree
         console.error(error)
       }
     },
-    [navProduct, navMeal, navRecipe]
+    [navigation, navProduct, navMeal, navRecipe]
   )
 
   if (isProductLoading || isAddingProductToJournal || isAddingProductToFridge || isProductFetching) {

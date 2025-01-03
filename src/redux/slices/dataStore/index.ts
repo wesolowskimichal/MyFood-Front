@@ -35,6 +35,9 @@ const dataStoreSlice = createSlice({
     addStore(state, action: PayloadAction<addStoreBody>) {
       state[action.payload.storeName] = { added: [], edited: {}, deleted: [] }
     },
+    clearStore(state, action: PayloadAction<string>) {
+      state[action.payload] = { added: [], edited: {}, deleted: [] }
+    },
     add(state, action: PayloadAction<addBody>) {
       const store = state[action.payload.storeName]
       if (store) {
@@ -60,7 +63,7 @@ const dataStoreSlice = createSlice({
   }
 })
 
-export const { addStore, add, edit, del } = dataStoreSlice.actions
-export type dataStoreAction = ReturnType<typeof addStore | typeof add | typeof edit | typeof del>
+export const { addStore, clearStore, add, edit, del } = dataStoreSlice.actions
+export type dataStoreAction = ReturnType<typeof addStore | typeof clearStore | typeof add | typeof edit | typeof del>
 
 export default dataStoreSlice.reducer
