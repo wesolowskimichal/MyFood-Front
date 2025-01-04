@@ -77,6 +77,7 @@ export interface Recipe extends _ID_URL_FIELD {
   picture: string
   likes: number
   is_liked: boolean
+  preparation: string
 }
 
 export interface Journal extends _ID_URL_FIELD {
