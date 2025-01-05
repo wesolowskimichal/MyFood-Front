@@ -111,7 +111,7 @@ const Journal = ({ navigation, route }: JournalScreenProps) => {
   return (
     <ScreenWrapper>
       {/* // for theme tests only */}
-      {/* <Button onPress={() => dispatch(toggleTheme())} title="Toggle Theme" /> */}
+      <Button onPress={() => dispatch(toggleTheme())} title="Toggle Theme" />
       {journalEntriesLoading || journalEntriesFetching || mealsLoading || mealsFetching ? (
         <View style={{ width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator animating={true} color={colors.accent} size="large" />

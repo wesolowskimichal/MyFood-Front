@@ -74,10 +74,15 @@ export interface Recipe extends _ID_URL_FIELD {
   added_by: User
   time: string
   difficulty: string
+  description: string
   picture: string
   likes: number
   is_liked: boolean
   preparation: string
+  products: {
+    product_id: string
+    amount_needed: number
+  }[]
 }
 
 export interface Journal extends _ID_URL_FIELD {
