@@ -6,7 +6,15 @@ import { useSelector } from 'react-redux'
 import { Image } from 'expo-image'
 import UnitSelector from '../unitSelector/Unitselector'
 import Icon from 'react-native-vector-icons/Feather'
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming } from 'react-native-reanimated'
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  LinearTransition,
+  SlideInLeft,
+  SlideOutRight
+} from 'react-native-reanimated'
 
 type _FridgeProductTileProps = {
   amount: number
@@ -60,8 +68,13 @@ const _FridgeProductTile = ({
   }
 
   return (
-    <Animated.View style={[imageStyle, { width: '100%', alignItems: 'center' }]}>
-      <Image source={{ uri: picture }} style={styles.productImage} />
+    <Animated.View
+      style={{ flex: 1, borderWidth: 1, borderColor: colors.neutral.border, borderRadius: 4 }}
+      layout={LinearTransition.springify()}
+      entering={SlideInLeft}
+      exiting={SlideOutRight}
+    >
+      <Image source={{ uri: picture }} style={{ width: '100%', aspectRatio: 1 }} />
       <Text style={styles.productName}>{name}</Text>
       <View style={styles.amountWrapper}>
         <TextInput
@@ -70,7 +83,13 @@ const _FridgeProductTile = ({
           keyboardType="numeric"
           onChangeText={onAmountChange}
         />
-        <UnitSelector unit={unit} avaibleUnits={avaibleUnits} setUnit={onUnitChange} />
+        <UnitSelector
+          unit={unit}
+          avaibleUnits={avaibleUnits}
+          setUnit={onUnitChange}
+          style={{ flex: 1, maxWidth: 96 }}
+          triggerStyle={{ width: '100%' }}
+        />
       </View>
       <Pressable
         onPress={onProductRemove}
@@ -92,28 +111,35 @@ const createStyles = (colors: ThemeColors) =>
     productImage: {
       width: '100%',
       height: 120,
-      borderRadius: 10,
+      borderRadius: 4,
       marginBottom: 8
     },
     productName: {
+      textAlign: 'center',
       fontSize: 16,
       fontWeight: '600',
       color: colors.neutral.text,
-      marginBottom: 12,
-      textAlign: 'center'
+      borderBottomWidth: 1,
+      marginBottom: 4
     },
     amountWrapper: {
       flexDirection: 'row',
       alignItems: 'center',
+      justifyContent: 'space-between',
       marginBottom: 12,
-      gap: 10
+      marginTop: 12,
+      gap: 24,
+      marginHorizontal: 'auto',
+      width: '80%'
     },
     amountInput: {
-      borderColor: colors.neutral.border,
+      borderColor: colors.neutral.text,
       borderWidth: 1,
-      borderRadius: 8,
-      height: 40,
-      width: 60,
+      borderRadius: 4,
+      padding: 0,
+      flex: 1,
+      height: 36,
+      maxWidth: 96,
       textAlign: 'center',
       color: colors.neutral.text,
       backgroundColor: colors.neutral.surface
@@ -123,9 +149,11 @@ const createStyles = (colors: ThemeColors) =>
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: '#CD5C5C',
-      padding: 8,
-      borderRadius: 8,
-      width: '90%'
+      paddingVertical: 4,
+      marginBottom: 1,
+      borderRadius: 4,
+      marginHorizontal: 'auto',
+      width: '80%'
     },
     removeButtonText: {
       color: colors.primary,

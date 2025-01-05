@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'white',
     padding: 20,
-    borderRadius: 10,
+    borderRadius: 4,
     marginHorizontal: 20
   },
   DialogOut: {

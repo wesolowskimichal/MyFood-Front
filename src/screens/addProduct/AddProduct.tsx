@@ -29,6 +29,7 @@ const AddProduct = ({ navigation, route }: AddProductScreenProps) => {
   const navBarcode = route.params.barcode ?? null
   const navMeal = route.params.meal
   const navFridge = route.params.fridge
+  const navRecipe = route.params.recipe
   const [addProduct, { isLoading: isAddingProduct }] = useAddProductMutation()
 
   const colors = useSelector((state: RootState) => state.theme.colors)
@@ -156,8 +157,14 @@ const AddProduct = ({ navigation, route }: AddProductScreenProps) => {
       }
 
       const result = await addProduct(formData).unwrap()
-      if (navMeal || navFridge) {
-        navigation.navigate('AddProductToComponent', { product: result, meal: navMeal, fridge: navFridge })
+      if (navMeal || navFridge || navRecipe) {
+        navigation.navigate('AddProductToComponent', {
+          product: result,
+          meal: navMeal,
+          fridge: navFridge,
+          recipe: navRecipe
+          // onFridgeAdd: navOnFridgeAdd
+        })
       } else {
         navigation.navigate('Journal')
       }
@@ -265,7 +272,7 @@ const AddProduct = ({ navigation, route }: AddProductScreenProps) => {
                   padding: 16,
                   borderColor: colors.complementary.danger,
                   borderWidth: 1,
-                  borderRadius: 8,
+                  borderRadius: 4,
                   marginBottom: 16
                 }}
               >
@@ -278,7 +285,7 @@ const AddProduct = ({ navigation, route }: AddProductScreenProps) => {
             )}
             <View style={styles.buttonWrapper}>
               <Pressable style={styles.bigButton} onPress={handleSaveProduct}>
-                <Text style={styles.bigButtonText}>Submit</Text>
+                <Text style={styles.bigButtonText}>ADD PRODUCT</Text>
               </Pressable>
             </View>
             <View style={styles.tableWrapper}>
@@ -301,6 +308,7 @@ const createStyles = (colors: ThemeColors) =>
     formWrapper: {
       flexDirection: 'row',
       justifyContent: 'space-between',
+      alignItems: 'center',
       marginBottom: 20
     },
     inputWrapper: {
@@ -317,11 +325,11 @@ const createStyles = (colors: ThemeColors) =>
     input: {
       width: '100%',
       padding: 10,
+      height: 36,
       borderWidth: 1,
-      borderColor: colors.neutral.border,
-      borderRadius: 8,
-      color: colors.neutral.text,
-      backgroundColor: colors.neutral.surface
+      borderColor: colors.neutral.text,
+      borderRadius: 4,
+      color: colors.neutral.text
     },
     inputError: {
       borderColor: colors.complementary.danger
@@ -339,7 +347,7 @@ const createStyles = (colors: ThemeColors) =>
       width: 150,
       height: 150,
       borderWidth: 1,
-      borderColor: colors.neutral.border,
+      borderColor: colors.neutral.text,
       marginBottom: 10
     },
     changeImageButton: {
@@ -347,8 +355,8 @@ const createStyles = (colors: ThemeColors) =>
       alignItems: 'center',
       marginTop: 8,
       borderWidth: 1,
-      borderColor: colors.neutral.border,
-      borderRadius: 8,
+      borderColor: colors.neutral.text,
+      borderRadius: 4,
       padding: 8
     },
     changeImageText: {
@@ -363,7 +371,7 @@ const createStyles = (colors: ThemeColors) =>
     bigButton: {
       backgroundColor: colors.accent,
       padding: 16,
-      borderRadius: 8,
+      borderRadius: 4,
       paddingLeft: 32,
       paddingRight: 32
     },

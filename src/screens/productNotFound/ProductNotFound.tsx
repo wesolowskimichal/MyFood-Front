@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useLayoutEffect } from 'react'
-import { FlatList, TextInput, StyleSheet, Pressable, Text } from 'react-native'
+import { FlatList, TextInput, StyleSheet, Pressable, Text, View } from 'react-native'
 import { ProductDetails, ProductNotFoundScreenProps } from '../../types/Types'
 import { useLazyGetProductsQuery } from '../../redux/api/slices/ProductApiSlice'
 import { useSelector } from 'react-redux'
@@ -12,14 +12,14 @@ import { RootState } from '../../redux/Store'
 import IonIcon from 'react-native-vector-icons/Ionicons'
 
 const ProductNotFound = ({ navigation, route }: ProductNotFoundScreenProps) => {
-  const { barcode, meal, fridge } = route.params
+  const { barcode, meal, fridge, recipe } = route.params
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState(barcode)
   const [isFinished, setIsFinished] = useState(true)
   const [searchType, setSearchType] = useState<'by_name' | 'by_barcode'>('by_barcode')
   const [accumulatedProducts, setAccumulatedProducts] = useState<ProductDetails[]>([])
 
-  const [trigger, { isLoading }] = useLazyGetProductsQuery()
+  const [trigger, { isLoading, isFetching }] = useLazyGetProductsQuery()
   const colors = useSelector((state: RootState) => state.theme.colors)
 
   useLayoutEffect(() => {
@@ -72,50 +72,49 @@ const ProductNotFound = ({ navigation, route }: ProductNotFoundScreenProps) => {
   }, [])
 
   const handleLoadMoreProducts = useCallback(() => {
-    if (!isLoading && !isFinished) {
+    if (!isLoading && !isFinished && !isFetching) {
       setPage(prevPage => prevPage + 1)
     }
-  }, [isLoading, isFinished])
+  }, [isLoading, isFinished, isFetching])
 
   const renderItem = ({ item }: { item: ProductDetails }) => (
-    <ProductInfoBar product={item} navigation={navigation} meal={meal} fridge={fridge} />
+    <ProductInfoBar product={item} navigation={navigation} meal={meal} fridge={fridge} recipe={recipe} />
   )
-
-  if (isLoading && page === 1) {
-    return <Loader />
-  }
 
   return (
     <ScreenWrapper>
-      <TextInput
-        value={search}
-        onChangeText={handleSearchInput}
-        style={[styles.input, { borderColor: colors.neutral.border, color: colors.neutral.text }]}
-        placeholder="Search..."
-        placeholderTextColor={colors.neutral.text}
-      />
-      <Pressable
-        onPress={() => navigation.navigate('AddProduct', { barcode, meal, fridge })}
-        style={{
-          backgroundColor: colors.neutral.surface,
-          padding: 16,
-          flexDirection: 'row',
-          gap: 10,
-          alignItems: 'center',
-          borderRadius: 8
-        }}
-      >
-        <IonIcon name="add-outline" size={24} color={colors.neutral.text} />
-        <Text style={{ color: colors.neutral.text, fontSize: 16, fontWeight: '600' }}>Add product</Text>
-      </Pressable>
-      <FlatList
-        data={accumulatedProducts}
-        renderItem={renderItem}
-        keyExtractor={item => item.id.toString()}
-        onEndReached={handleLoadMoreProducts}
-        onEndReachedThreshold={0.5}
-        ListFooterComponent={isFinished ? null : <ListItemSkeleton width="100%" height={100} borderRadius={10} />}
-      />
+      {isLoading && page === 1 ? <Loader /> : null}
+      <View style={{ paddingHorizontal: 16 }}>
+        <TextInput
+          value={search}
+          onChangeText={handleSearchInput}
+          style={[styles.input, { borderColor: colors.neutral.border, color: colors.neutral.text }]}
+          placeholder="Search..."
+          placeholderTextColor={colors.neutral.text}
+        />
+        <Pressable
+          onPress={() => navigation.navigate('AddProduct', { barcode, meal, fridge, recipe })}
+          style={{
+            backgroundColor: colors.neutral.surface,
+            padding: 16,
+            flexDirection: 'row',
+            gap: 10,
+            alignItems: 'center',
+            borderRadius: 4
+          }}
+        >
+          <IonIcon name="add-outline" size={24} color={colors.neutral.text} />
+          <Text style={{ color: colors.neutral.text, fontSize: 16, fontWeight: '600' }}>Add product</Text>
+        </Pressable>
+        <FlatList
+          data={accumulatedProducts}
+          renderItem={renderItem}
+          keyExtractor={item => item.id.toString()}
+          onEndReached={handleLoadMoreProducts}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={isFinished ? null : <ListItemSkeleton width="100%" height={100} borderRadius={4} />}
+        />
+      </View>
     </ScreenWrapper>
   )
 }
@@ -123,9 +122,9 @@ const ProductNotFound = ({ navigation, route }: ProductNotFoundScreenProps) => {
 const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 10
+    borderRadius: 4,
+    padding: 4,
+    marginBottom: 4
   }
 })
 

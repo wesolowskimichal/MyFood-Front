@@ -68,6 +68,23 @@ export interface Fridge extends _ID_FIELD {
   is_on_shopping_list: boolean
 }
 
+export interface Recipe extends _ID_URL_FIELD {
+  name: string
+  shared: boolean
+  added_by: User
+  time: string
+  difficulty: string
+  description: string
+  picture: string
+  likes: number
+  is_liked: boolean
+  preparation: string
+  products: {
+    product_id: string
+    amount_needed: number
+  }[]
+}
+
 export interface Journal extends _ID_URL_FIELD {
   readonly date: Date
   object: {
@@ -99,6 +116,7 @@ export type JournalPage = Page<Journal>
 export type FridgePage = Page<Fridge>
 export type MealPage = Page<Meal>
 export type ProductPage = Page<ProductDetails>
+export type RecipePage = Page<Recipe>
 
 //#endregion
 
@@ -107,13 +125,31 @@ export type ProductPage = Page<ProductDetails>
 export type RootStackParamList = {
   Login: { infoText?: string; lastUsername?: string }
   ProductInfo: { product: ProductDetails }
-  AddProductToComponent: { product?: ProductDetails; meal?: Meal; fridge?: boolean }
-  ProductNotFound: { barcode: ProductBase['barcode']; meal?: Meal; fridge?: boolean }
-  AddProduct: { barcode?: string; meal?: Meal; fridge?: boolean }
+  AddProductToComponent: {
+    product?: ProductDetails
+    meal?: Meal
+    fridge?: boolean
+    recipe?: boolean
+  }
+  ProductNotFound: {
+    barcode: ProductBase['barcode']
+    meal?: Meal
+    fridge?: boolean
+    recipe?: boolean
+  }
+  AddProduct: {
+    barcode?: string
+    meal?: Meal
+    fridge?: boolean
+    recipe?: boolean
+  }
+  AddRecipe: undefined
   Register: undefined
   Journal: undefined
   Test: undefined
   Fridge: undefined
+  Recipes: undefined
+  Recipe: { recipe: Recipe }
   Main: undefined
 }
 
@@ -125,6 +161,9 @@ export type ProductNotFoundScreenProps = NativeStackScreenProps<RootStackParamLi
 export type AddProductToComponentScreenProps = NativeStackScreenProps<RootStackParamList, 'AddProductToComponent'>
 export type ProductInfoScreenProps = NativeStackScreenProps<RootStackParamList, 'ProductInfo'>
 export type FridgeScreenProps = NativeStackScreenProps<RootStackParamList, 'Fridge'>
+export type RecipesScreenProps = NativeStackScreenProps<RootStackParamList, 'Recipes'>
+export type RecipeScreenProps = NativeStackScreenProps<RootStackParamList, 'Recipe'>
+export type AddRecipeScreenProps = NativeStackScreenProps<RootStackParamList, 'AddRecipe'>
 export type TestScreenProps = NativeStackScreenProps<ParamListBase, 'Test'>
 
 export type NavProps = {
@@ -154,3 +193,35 @@ export type ThemeColors = {
   }
 }
 //#endregion
+
+export type DataState<T> = {
+  added: T[]
+  edited: Record<string, T>
+  // edited: Map<string, T>
+  deleted: string[]
+}
+
+export namespace PS {
+  enum Response {
+    OK = 200,
+    CREATED = 201,
+    NO_CONTENT = 204,
+    BAD_REQUEST = 400,
+    NOT_FOUND = 404
+  }
+
+  export type SuccessResponse<T> = {
+    status: Response.OK | Response.CREATED | Response.NO_CONTENT
+    data: T
+  }
+
+  export type ErrorResponse = {
+    status: Response.BAD_REQUEST | Response.NOT_FOUND
+    message: string
+  }
+
+  export type FunctionResponse = {
+    status: Response
+    response: SuccessResponse<unknown> | ErrorResponse
+  }
+}

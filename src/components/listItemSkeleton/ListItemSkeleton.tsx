@@ -10,7 +10,7 @@ interface ListItemSkeletonProps {
   borderRadius?: number
 }
 
-const ListItemSkeleton = ({ width, height, borderRadius = 8 }: ListItemSkeletonProps) => {
+const ListItemSkeleton = ({ width, height, borderRadius = 4 }: ListItemSkeletonProps) => {
   const fadeAnim = useRef(new Animated.Value(0)).current
   const colors = useSelector((state: RootState) => state.theme.colors)
   const styles = useMemo(() => createStyles(colors), [colors])

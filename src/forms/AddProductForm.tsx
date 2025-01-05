@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
 import { ProductDetails, ThemeColors, Unit } from '../types/Types'
 import { useSelector } from 'react-redux'
 import { RootState } from '../redux/Store'
@@ -58,25 +58,38 @@ const AddProductForm = ({ product, onSubmit }: AddProductFormProps) => {
   }, [product, amount, unit])
 
   return (
-    <View style={styles.form}>
-      <Image source={{ uri: product.picture }} style={styles.image} />
+    <ScrollView>
+      <View style={styles.form}>
+        <Image source={{ uri: product.picture }} style={styles.image} />
 
-      <View style={styles.doubleInputWrapper}>
-        <TextInput
-          style={styles.doubleInput}
-          placeholder="Amount"
-          value={amount?.toString() || ''}
-          keyboardType="numeric"
-          onChangeText={handleAmountChange}
-          placeholderTextColor={colors.neutral.border}
-        />
-        <UnitSelector unit={unit} avaibleUnits={avaibleUnits} setUnit={(unit: Unit) => setUnit(unit)} />
+        <Text
+          style={{
+            fontSize: 24,
+            fontWeight: '600',
+            color: colors.neutral.text,
+            textAlign: 'center'
+          }}
+        >
+          {product.name}
+        </Text>
+
+        <View style={styles.doubleInputWrapper}>
+          <TextInput
+            style={styles.doubleInput}
+            placeholder="Amount"
+            value={amount?.toString() || ''}
+            keyboardType="numeric"
+            onChangeText={handleAmountChange}
+            placeholderTextColor={colors.neutral.border}
+          />
+          <UnitSelector unit={unit} avaibleUnits={avaibleUnits} setUnit={(unit: Unit) => setUnit(unit)} />
+        </View>
+        <Pressable style={styles.submit} onPress={() => onSubmit(amount, unit)}>
+          <Text style={{ fontWeight: '600' }}>ADD PRODUCT</Text>
+        </Pressable>
+        <Table data={createProductTable} showKcal />
       </View>
-      <Pressable style={styles.submit} onPress={() => onSubmit(amount, unit)}>
-        <Text>Add Product</Text>
-      </Pressable>
-      <Table data={createProductTable} showKcal />
-    </View>
+    </ScrollView>
   )
 }
 
@@ -90,7 +103,7 @@ const createStyles = (colors: ThemeColors) =>
     image: {
       aspectRatio: 1,
       width: '100%',
-      borderRadius: 16,
+      borderRadius: 4,
       marginBottom: 16
     },
     doubleInputWrapper: {
@@ -101,19 +114,20 @@ const createStyles = (colors: ThemeColors) =>
     },
     doubleInput: {
       flex: 1,
-      padding: 10,
+      paddingVertical: 2,
+      paddingHorizontal: 8,
       borderWidth: 1,
-      borderColor: colors.neutral.border,
-      borderRadius: 8,
+      borderColor: colors.neutral.text,
+      borderRadius: 4,
       color: colors.neutral.text,
       backgroundColor: colors.neutral.surface
     },
     submit: {
-      padding: 16,
+      paddingVertical: 12,
       backgroundColor: colors.neutral.surface,
       borderWidth: 1,
-      borderColor: colors.neutral.border,
-      borderRadius: 8,
+      borderColor: colors.neutral.text,
+      borderRadius: 4,
       alignItems: 'center'
     }
   })

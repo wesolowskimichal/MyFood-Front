@@ -66,7 +66,7 @@ const createStyles = (colors: ThemeColors) =>
     Image: {
       aspectRatio: 1,
       width: '100%',
-      borderRadius: 16,
+      borderRadius: 4,
       marginBottom: 16
     },
     TableWrapper: {
