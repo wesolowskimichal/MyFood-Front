@@ -23,10 +23,10 @@ export const DarkThemeColors: ThemeColors = {
   accent: '#F97316',
   accentDark: '#9A3412 ',
   neutral: {
-    background: '#111827',
-    surface: '#1F2937',
-    text: '#F3F4F6',
-    border: '#596382'
+    background: '#4d4c4c',
+    surface: '#353535',
+    border: '#626262',
+    text: '#F3F4F6'
   },
   complementary: {
     success: '#10B981',

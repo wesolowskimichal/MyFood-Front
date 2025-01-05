@@ -8,12 +8,14 @@ import { journalApiSlice } from './api/slices/JournalApiSlice'
 import { userMealApiSlice } from './api/slices/UserMealSlice'
 import { productApiSlice } from './api/slices/ProductApiSlice'
 import { recipeApiSlice } from './api/slices/RecipeApiSlice'
+import { userApiSlice } from './api/slices/UserApiSlice'
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     theme: themeReducer,
     dataStore: dataStoreReducer,
+    [userApiSlice.reducerPath]: userApiSlice.reducer,
     [fridgeApiSlice.reducerPath]: fridgeApiSlice.reducer,
     [journalApiSlice.reducerPath]: journalApiSlice.reducer,
     [recipeApiSlice.reducerPath]: recipeApiSlice.reducer,
@@ -22,6 +24,7 @@ export const store = configureStore({
   },
   middleware: getDefaultMiddleware =>
     getDefaultMiddleware().concat(
+      userApiSlice.middleware,
       fridgeApiSlice.middleware,
       journalApiSlice.middleware,
       recipeApiSlice.middleware,

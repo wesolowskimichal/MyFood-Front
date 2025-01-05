@@ -57,6 +57,10 @@ export const productApiSlice = createApi({
       query: barcode => `api/product/${barcode}`,
       providesTags: (result, error, barcode) => [{ type: 'Product' as const, id: barcode }]
     }),
+    getProductbyId: builder.query<ProductDetails, ProductDetails['id']>({
+      query: id => `api/product/id/${id}`,
+      providesTags: (result, error, id) => [{ type: 'Product' as const, id: id }]
+    }),
     updateProduct: builder.mutation<ProductDetails, Partial<ProductDetails> & Pick<ProductDetails, 'barcode'>>({
       query: product => ({
         url: `api/product/${product.barcode}/`,
@@ -104,6 +108,8 @@ export const productApiSlice = createApi({
 
 export const {
   useGetProductQuery,
+  useGetProductbyIdQuery,
+  useLazyGetProductbyIdQuery,
   useLazyGetProductQuery,
   useUpdateProductMutation,
   usePatchProductMutation,

@@ -2,9 +2,8 @@ import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/Store'
 import { ProductDetails, RootStackParamList, Unit } from '../../types/Types'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native'
+import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import Animated, { LinearTransition, SlideInLeft, SlideOutRight } from 'react-native-reanimated'
-import Product from '../product/Product'
 import { NavigationProp } from '@react-navigation/native'
 import { useDataQuery } from '../../redux/slices/dataStore/hooks/useDataQuery'
 import { Image } from 'expo-image'
@@ -12,6 +11,8 @@ import UnitSelector from '../unitSelector/Unitselector'
 import { UnitAmountConverter, UnitProductConverter } from '../../helpers/UnitAmountConverter'
 import Dialog, { DialogContent, DialogTrigger } from '../dialog/Dialog'
 import Icon from 'react-native-vector-icons/Feather'
+import { useGetProductbyIdQuery } from '../../redux/api/slices/ProductApiSlice'
+import ProductView from '../product/ProductView'
 
 export type ProductInsert = {
   product: ProductDetails
@@ -26,10 +27,14 @@ type ProductInserterProps = {
       amount_needed: number
     }[]
   ) => void
+  data?: {
+    product_id: string
+    amount_needed: number
+  }[]
   navigation: NavigationProp<RootStackParamList>
 }
 
-const ProductInserter = ({ type, setData, navigation }: ProductInserterProps) => {
+const ProductInserter = ({ type, setData, data, navigation }: ProductInserterProps) => {
   const colors = useSelector((state: RootState) => state.theme.colors)
 
   const { added, edited, deleted, addItem, editItem, deleteItem, isEdited, isDeleted, getEdited } = useDataQuery<
@@ -78,9 +83,9 @@ const ProductInserter = ({ type, setData, navigation }: ProductInserterProps) =>
   }, [products])
 
   return (
-    <View style={{ flex: 1, paddingHorizontal: 2 }}>
-      <ScrollView>
-        {type === 'add'
+    <View style={{ flex: 1, paddingHorizontal: 2, maxHeight: 400 }}>
+      <ScrollView nestedScrollEnabled>
+        {type === 'add' || !data
           ? products.map(({ product, amount_needed }) => (
               <Animated.View
                 key={product.id}
@@ -100,7 +105,7 @@ const ProductInserter = ({ type, setData, navigation }: ProductInserterProps) =>
                 />
               </Animated.View>
             ))
-          : products.map(({ product, amount_needed }, index) => (
+          : data.map(({ product_id, amount_needed }, index) => (
               <Animated.View
                 key={index}
                 layout={LinearTransition.springify()}
@@ -110,16 +115,15 @@ const ProductInserter = ({ type, setData, navigation }: ProductInserterProps) =>
                   flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  marginBottom: 16
+                  marginBottom: 2
                 }}
               >
-                <Product
+                <IdProduct
                   navigation={navigation}
-                  product={product}
-                  defaultAmount={amount_needed}
-                  onNutrientsChange={amount => updateProduct(product.id, amount)}
-                  onProductRemove={() => removeProduct(product.id)}
-                  destructor={() => {}}
+                  product_id={product_id}
+                  amount_needed={amount_needed}
+                  updateProduct={updateProduct}
+                  removeProduct={removeProduct}
                 />
               </Animated.View>
             ))}
@@ -148,6 +152,29 @@ const ProductInserter = ({ type, setData, navigation }: ProductInserterProps) =>
       )}
     </View>
   )
+}
+
+type IdProductProps = {
+  navigation: NavigationProp<RootStackParamList>
+  product_id: string
+  amount_needed: number
+  updateProduct: (product_id: string, amount: number) => void
+  removeProduct: (id: string) => void
+}
+
+const IdProduct = ({ navigation, product_id, amount_needed, updateProduct, removeProduct }: IdProductProps) => {
+  const { data: product, error } = useGetProductbyIdQuery(product_id)
+  const colors = useSelector((state: RootState) => state.theme.colors)
+
+  if (error) {
+    return <Text>{error.toString()}</Text>
+  }
+
+  if (!product) {
+    return <ActivityIndicator size="small" color={colors.accent} />
+  }
+
+  return <ProductView navigation={navigation} product={product} amount={amount_needed} unit={product.unit} />
 }
 
 type ProductElementProps = {

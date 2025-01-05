@@ -394,9 +394,10 @@ const createStyles = (colors: ThemeColors) =>
       marginBottom: 20
     },
     sectionHeader: {
-      fontSize: 16,
-      color: colors.neutral.text,
-      marginBottom: 16,
+      fontSize: 18,
+      fontWeight: '600',
+      color: colors.accent,
+      marginBottom: 12,
       borderBottomWidth: 1,
       borderBottomColor: colors.accent,
       paddingHorizontal: 5

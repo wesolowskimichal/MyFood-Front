@@ -18,6 +18,7 @@ import ProductNotFound from '../../screens/productNotFound/ProductNotFound'
 import AddProduct from '../../screens/addProduct/AddProduct'
 import AddProductToComponent from '../../screens/AddProductToComponent/AddProductToComponent'
 import AddRecipe from '../../screens/addRecipe/AddRecipe'
+import Recipe from '../../screens/recipe/Recipe'
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
 
@@ -108,6 +109,16 @@ const AppNavigation = () => {
                 animationTypeForReplace: 'push',
                 animation: 'slide_from_right',
                 title: 'Product not found'
+              }}
+            />
+            <Stack.Screen
+              name="Recipe"
+              component={Recipe}
+              options={{
+                headerShown: false,
+                presentation: 'modal',
+                animationTypeForReplace: 'push',
+                animation: 'slide_from_right'
               }}
             />
           </>

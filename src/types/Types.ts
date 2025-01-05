@@ -74,9 +74,15 @@ export interface Recipe extends _ID_URL_FIELD {
   added_by: User
   time: string
   difficulty: string
+  description: string
   picture: string
   likes: number
   is_liked: boolean
+  preparation: string
+  products: {
+    product_id: string
+    amount_needed: number
+  }[]
 }
 
 export interface Journal extends _ID_URL_FIELD {
@@ -143,6 +149,7 @@ export type RootStackParamList = {
   Test: undefined
   Fridge: undefined
   Recipes: undefined
+  Recipe: { recipe: Recipe }
   Main: undefined
 }
 
@@ -155,6 +162,7 @@ export type AddProductToComponentScreenProps = NativeStackScreenProps<RootStackP
 export type ProductInfoScreenProps = NativeStackScreenProps<RootStackParamList, 'ProductInfo'>
 export type FridgeScreenProps = NativeStackScreenProps<RootStackParamList, 'Fridge'>
 export type RecipesScreenProps = NativeStackScreenProps<RootStackParamList, 'Recipes'>
+export type RecipeScreenProps = NativeStackScreenProps<RootStackParamList, 'Recipe'>
 export type AddRecipeScreenProps = NativeStackScreenProps<RootStackParamList, 'AddRecipe'>
 export type TestScreenProps = NativeStackScreenProps<ParamListBase, 'Test'>
 

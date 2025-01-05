@@ -1,11 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import { FlatList, StyleSheet, Text, View, TextInput, Pressable } from 'react-native'
 import { RecipesScreenProps, ThemeColors, Recipe as IRecipe, Recipe } from '../../types/Types'
-import {
-  useGetRecipesQuery,
-  useLikeRecipeMutation,
-  useRemoveRecipeMutation
-} from '../../redux/api/slices/RecipeApiSlice'
+import { useGetRecipesQuery } from '../../redux/api/slices/RecipeApiSlice'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/Store'
 import ListItemSkeleton from '../../components/listItemSkeleton/ListItemSkeleton'
@@ -15,10 +11,9 @@ import MaterialIcon from 'react-native-vector-icons/MaterialIcons'
 import EmbeddedSwitch from '../../components/embeddedSwitch/EmbeddedSwitch'
 import Loader from '../../components/loader/Loader'
 import UpperLoader from '../../components/upperLoader/UpperLoader'
-import { useAppDispatch } from '../../hooks/useAppDispatch'
 import RecipeItem from '../../components/recipeItem/RecipeItem'
 import { useDataQuery } from '../../redux/slices/dataStore/hooks/useDataQuery'
-import Animated, { LinearTransition, SlideInLeft, SlideOutRight } from 'react-native-reanimated'
+import Animated, { SlideInLeft, SlideOutRight } from 'react-native-reanimated'
 
 const Recipes = ({ navigation }: RecipesScreenProps) => {
   const colors = useSelector((state: RootState) => state.theme.colors)
@@ -50,9 +45,15 @@ const Recipes = ({ navigation }: RecipesScreenProps) => {
     }
   }, [isFetching, recipes])
 
+  const handleOnRecipeClick = useCallback(
+    (recipe: IRecipe) => {
+      navigation.navigate('Recipe', { recipe })
+    },
+    [navigation]
+  )
+
   const renderItem = ({ item }: { item: IRecipe }) => {
-    console.log({ renderITem: item.id })
-    return <RecipeItem key={item.id} recipe={item} type={viewType} />
+    return <RecipeItem key={item.id} recipe={item} type={viewType} onClick={handleOnRecipeClick} />
   }
 
   const handleSwitchToggle = useCallback(() => {
