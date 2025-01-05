@@ -1,20 +1,22 @@
 import React, { useMemo, useEffect, useState } from 'react'
-import { View, Text, TextInput, Switch, StyleSheet, Pressable } from 'react-native'
+import { View, Text, TextInput, Switch, StyleSheet, Pressable, ActivityIndicator } from 'react-native'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Animated, { useSharedValue, withTiming, useAnimatedStyle } from 'react-native-reanimated'
 import { z } from 'zod'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/Store'
-import { AddRecipeScreenProps, Recipe, ThemeColors } from '../../types/Types'
+import { EditRecipeScreenProps, Recipe, ThemeColors } from '../../types/Types'
 import StepCreator from '../../components/stepCreator/StepCreator'
 import DateTimePickerModal from 'react-native-modal-datetime-picker'
 import ProductInserter from '../../components/productInserter/ProductInserter'
-import { useAddRecipeMutation } from '../../redux/api/slices/RecipeApiSlice'
+import { usePatchRecipeMutation } from '../../redux/api/slices/RecipeApiSlice'
 import * as ImagePicker from 'expo-image-picker'
 import * as ImageManipulator from 'expo-image-manipulator'
 import { Image } from 'expo-image'
 import { useDataQuery } from '../../redux/slices/dataStore/hooks/useDataQuery'
+import { useLazyGetProductbyIdQuery } from '../../redux/api/slices/ProductApiSlice'
+import AntDesignIcon from 'react-native-vector-icons/AntDesign'
 
 const recipeSchema = z.object({
   name: z.string().min(1, { message: 'Name is required' }),
@@ -37,14 +39,22 @@ const recipeSchema = z.object({
 
 type recipeType = z.infer<typeof recipeSchema>
 
-const AddRecipe = ({ navigation }: AddRecipeScreenProps) => {
-  const [addRecipe, { isLoading: isAddRecipeLoading, isError: isAddRecipeError }] = useAddRecipeMutation()
+const EditRecipe = ({ navigation, route }: EditRecipeScreenProps) => {
+  const { recipe } = route.params
+  const [editRecipe, { isLoading: isRecipeEditing, isError: isRecipeEditgError, isSuccess: isRecipeEditSuccess }] =
+    usePatchRecipeMutation()
   const [picture, setPicture] = useState<File | null>(null)
-  const { addItem } = useDataQuery<Recipe, Partial<Recipe>>({
+  const [getProduct] = useLazyGetProductbyIdQuery()
+  const { editItem } = useDataQuery<Recipe, Partial<Recipe>>({
     storeName: 'Recipes'
   })
-  const { cleanUp } = useDataQuery({
+  const { addItem, cleanUp } = useDataQuery({
     storeName: 'ProductInsert'
+  })
+  const { addItem: addRecipeRefresh } = useDataQuery<{
+    recipe_id: string
+  }>({
+    storeName: 'RefreshStore'
   })
   const colors = useSelector((state: RootState) => state.theme.colors)
   const styles = useMemo(() => createStyles(colors), [colors])
@@ -56,15 +66,7 @@ const AddRecipe = ({ navigation }: AddRecipeScreenProps) => {
   } = useForm({
     resolver: zodResolver(recipeSchema),
     defaultValues: {
-      name: '',
-      description: '',
-      shared: false,
-      products: [],
-      preparation: '',
-      time: '',
-      difficulty: '',
-      servings: 1,
-      picture: ''
+      ...recipe
     }
   })
 
@@ -78,7 +80,7 @@ const AddRecipe = ({ navigation }: AddRecipeScreenProps) => {
     setTimePickerVisibility(false)
   }
 
-  const selectedDifficulty = useSharedValue(-1)
+  const selectedDifficulty = useSharedValue(recipe.difficulty === 'easy' ? 0 : recipe.difficulty === 'medium' ? 1 : 2)
   const slideValue = useSharedValue(-300)
 
   const customColors = {
@@ -91,12 +93,35 @@ const AddRecipe = ({ navigation }: AddRecipeScreenProps) => {
 
   useEffect(() => {
     slideValue.value = 0
-    cleanUp()
 
     return () => {
       cleanUp()
     }
   }, [])
+
+  useEffect(() => {
+    cleanUp()
+
+    const fetchAndAddProducts = async () => {
+      try {
+        for (const product of recipe.products) {
+          const fetchedProduct = await getProduct(product.product_id).unwrap()
+
+          addItem(
+            {
+              product: fetchedProduct,
+              amount_needed: product.amount_needed
+            },
+            product.product_id
+          )
+        }
+      } catch (error) {
+        console.error(`Failed to fetch product:`, error)
+      }
+    }
+
+    fetchAndAddProducts()
+  }, [recipe])
 
   const getAnimatedDifficultyStyles = (levelIndex: number) => {
     return useAnimatedStyle(() => {
@@ -155,10 +180,11 @@ const AddRecipe = ({ navigation }: AddRecipeScreenProps) => {
 
   const onSubmit = async (data: any) => {
     try {
-      const recipe: recipeType = { ...data, picture: picture }
-      delete recipe.picture
-      const response = await addRecipe(recipe).unwrap()
-      addItem(response)
+      const _recipe: recipeType = { ...data, picture: picture }
+      delete _recipe.picture
+      const response = await editRecipe({ id: recipe.id, ..._recipe }).unwrap()
+      editItem(recipe.id, response)
+      addRecipeRefresh({ recipe_id: recipe.id }, recipe.id)
     } catch (error) {
       console.error('Error adding recipe:', error)
     }
@@ -294,7 +320,7 @@ const AddRecipe = ({ navigation }: AddRecipeScreenProps) => {
                       const numberValue = parseInt(text, 10)
                       onChange(isNaN(numberValue) ? 0 : numberValue)
                     }}
-                    value={value?.toString() || ''}
+                    value={value?.toString()}
                   />
                 </View>
                 {errors.servings && <Text style={styles.errorText}>{errors.servings.message as string}</Text>}
@@ -341,7 +367,9 @@ const AddRecipe = ({ navigation }: AddRecipeScreenProps) => {
           <Controller
             name="preparation"
             control={control}
-            render={({ field: { onChange } }) => <StepCreator type="edit" setData={onChange} />}
+            render={({ field: { onChange } }) => (
+              <StepCreator type="edit" data={recipe.preparation} setData={onChange} />
+            )}
           />
           {errors.preparation && <Text style={styles.errorText}>{errors.preparation.message as string}</Text>}
         </View>
@@ -362,20 +390,26 @@ const AddRecipe = ({ navigation }: AddRecipeScreenProps) => {
       <Pressable
         onPress={handleSubmit(onSubmit)}
         style={{
-          backgroundColor: colors.accent
+          backgroundColor: colors.accent,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center'
         }}
       >
         <Text
           style={{
-            color: colors.primary,
+            color: isRecipeEditgError ? colors.complementary.danger : colors.primary,
             padding: 8,
             textAlign: 'center',
             fontSize: 16,
             fontWeight: '600'
           }}
         >
-          ADD RECIPE
+          EDIT RECIPE
         </Text>
+        {isRecipeEditing && <ActivityIndicator color={colors.primary} />}
+        {isRecipeEditgError && <AntDesignIcon name="close" size={24} color={colors.complementary.danger} />}
+        {isRecipeEditSuccess && <AntDesignIcon name="check" size={24} color={colors.complementary.success} />}
       </Pressable>
     </Animated.ScrollView>
   )
@@ -447,4 +481,4 @@ const createStyles = (colors: ThemeColors) =>
     }
   })
 
-export default AddRecipe
+export default EditRecipe

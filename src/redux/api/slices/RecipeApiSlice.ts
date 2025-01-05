@@ -27,7 +27,7 @@ type MutateRecipeBody =
       }[]
       preparation: string
       time: string
-      difficulty: 'easy' | 'medium' | 'hard'
+      difficulty: string
       servings: number
       picture?: string
     }
@@ -127,7 +127,7 @@ export const recipeApiSlice = createApi({
       query: id => `api/recipe/${id}/`,
       providesTags: recipe => (recipe ? [{ type: 'Recipe', id: recipe.id }] : [])
     }),
-    patchRecipe: builder.query<Recipe, Partial<MutateRecipeBody> & { id: string }>({
+    patchRecipe: builder.mutation<Recipe, Partial<MutateRecipeBody> & { id: string }>({
       query: ({ id, ...recipe }) => ({
         url: `api/recipe/${id}/`,
         method: 'PATCH',
@@ -161,7 +161,8 @@ export const {
   useGetRecipesQuery,
   useAddRecipeMutation,
   useGetRecipeByIdQuery,
-  usePatchRecipeQuery,
+  useLazyGetRecipeByIdQuery,
+  usePatchRecipeMutation,
   useLikeRecipeMutation,
   useRemoveRecipeMutation
 } = recipeApiSlice

@@ -3,6 +3,8 @@ import { View, Text, TextInput, Button, ScrollView, Pressable } from 'react-nati
 import Animated, { SlideInLeft, SlideOutRight, LinearTransition } from 'react-native-reanimated'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/Store'
+import Dialog, { DialogContent, DialogTrigger } from '../dialog/Dialog'
+import Icon from 'react-native-vector-icons/Feather'
 
 type StepCreatorProps = {
   type: 'edit' | 'view'
@@ -13,14 +15,9 @@ type StepCreatorProps = {
 const StepCreator = ({ type, data, setData }: StepCreatorProps) => {
   const colors = useSelector((state: RootState) => state.theme.colors)
 
-  const [steps, setSteps] = useState<string[]>([])
+  const [steps, setSteps] = useState<string[]>(data ? data.split('\n') : [])
   const [newStep, setNewStep] = useState<string>('')
-
-  useEffect(() => {
-    if (data && type === 'view') {
-      setSteps(data.split('\n'))
-    }
-  }, [data, type])
+  const [isRemoveProductDialogVisible, setIsRemoveProductDialogVisible] = useState(false)
 
   const addStep = useCallback(() => {
     if (newStep.trim()) {
@@ -82,6 +79,56 @@ const StepCreator = ({ type, data, setData }: StepCreatorProps) => {
                     color: colors.neutral.text
                   }}
                 />
+
+                <Dialog visible={isRemoveProductDialogVisible} setVisible={setIsRemoveProductDialogVisible}>
+                  <DialogTrigger
+                    style={{
+                      flexDirection: 'row',
+                      justifyContent: 'space-between'
+                    }}
+                  >
+                    <Icon name="trash-2" size={24} color={colors.complementary.danger} style={{ padding: 4 }} />
+                  </DialogTrigger>
+                  <DialogContent style={{ flexDirection: 'column', gap: 24 }}>
+                    <Text style={{ color: colors.neutral.text, fontSize: 16, textAlign: 'center', fontWeight: '600' }}>
+                      Are you sure you want to remove this step from Recipe?
+                    </Text>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+                      <Pressable
+                        onPress={() => setSteps(prevSteps => prevSteps.filter((_, i) => i !== index))}
+                        style={{
+                          borderWidth: 1,
+                          borderColor: colors.neutral.border,
+                          borderRadius: 4,
+                          padding: 10,
+                          width: 100,
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          backgroundColor: '#CD5C5C',
+                          flexDirection: 'row',
+                          gap: 5
+                        }}
+                      >
+                        <Text style={{ color: colors.primary }}>Yes</Text>
+                        <Icon name="trash-2" size={14} color={colors.primary} />
+                      </Pressable>
+                      <Pressable
+                        style={{
+                          borderWidth: 1,
+                          borderColor: colors.neutral.border,
+                          borderRadius: 4,
+                          padding: 10,
+                          width: 100,
+                          justifyContent: 'center',
+                          alignItems: 'center'
+                        }}
+                        onPress={() => setIsRemoveProductDialogVisible(false)}
+                      >
+                        <Text>No</Text>
+                      </Pressable>
+                    </View>
+                  </DialogContent>
+                </Dialog>
               </Animated.View>
             ))
           : steps.map((step, index) => (

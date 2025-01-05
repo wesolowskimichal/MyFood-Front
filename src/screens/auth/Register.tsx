@@ -47,7 +47,6 @@ const Register = ({ navigation, route: _route }: RegisterScreenProps) => {
       formData.append('first_name', firstName.trim())
       formData.append('last_name', lastName.trim())
       if (picture) {
-        console.log('adding picture')
         formData.append('picture', {
           uri: picture,
           name: 'profile.jpg',
@@ -64,7 +63,6 @@ const Register = ({ navigation, route: _route }: RegisterScreenProps) => {
         throw new Error('Registration failed')
       }
       const auth: User = response.data
-      console.log(auth)
       navigation.navigate('Login', {
         infoText: 'Successfully registered! Log in to your account',
         lastUsername: username.trim()

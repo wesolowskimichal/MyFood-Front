@@ -79,6 +79,7 @@ export interface Recipe extends _ID_URL_FIELD {
   likes: number
   is_liked: boolean
   preparation: string
+  servings: number
   products: {
     product_id: string
     amount_needed: number

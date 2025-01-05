@@ -8,19 +8,39 @@ import StepCreator from '../../components/stepCreator/StepCreator'
 import ProductInserter from '../../components/productInserter/ProductInserter'
 import ScreenWrapper from '../../components/screenWrapper/ScreenWrapper'
 import { GetLikes } from '../../helpers/GetLikes'
-import { ReactNode } from 'react'
+import { ReactNode, useEffect, useState } from 'react'
 import AntDesignIcon from 'react-native-vector-icons/AntDesign'
+import { useDataQuery } from '../../redux/slices/dataStore/hooks/useDataQuery'
+import { useLazyGetRecipeByIdQuery } from '../../redux/api/slices/RecipeApiSlice'
 
 const Recipe = ({ route, navigation }: RecipeScreenProps) => {
-  const { recipe } = route.params
-  console.log(recipe)
+  const { recipe: _recipe } = route.params
   const { data: user, isLoading: isUserLoading } = useGetUserQuery()
+  const [getRecipe] = useLazyGetRecipeByIdQuery()
+  const [recipe, setRecipe] = useState(_recipe)
   const isOwner = user?.id === recipe.added_by.id
+
+  const { items, deleteItem } = useDataQuery<{
+    recipe_id: string
+  }>({
+    storeName: 'RefreshStore'
+  })
+
+  useEffect(() => {
+    const fetchRecipe = async () => {
+      const response = await getRecipe(recipe.id).unwrap()
+      setRecipe(response)
+      deleteItem(recipe.id)
+    }
+    if (items('recipe_id').some(item => item.recipe_id === recipe.id)) {
+      fetchRecipe()
+    }
+  }, [items])
 
   const colors = useSelector((state: RootState) => state.theme.colors)
 
   const timeFormatter = (time: string) => {
-    const [_hours, _minutes] = time.split(':')
+    const [_, _hours, _minutes] = time.split(':')
     const minutes = _minutes.replace(/^0+/, '')
     const hours = _hours.replace(/^0+/, '')
     if (hours.length === 0) return `${minutes}m`
@@ -46,7 +66,7 @@ const Recipe = ({ route, navigation }: RecipeScreenProps) => {
         {isOwner && (
           <Pressable
             style={{ position: 'absolute', right: 16, top: 8, zIndex: 10 }}
-            // onPress={() => navigation.navigate('RecipeEdit', { recipe })}
+            onPress={() => navigation.navigate('EditRecipe', { recipe })}
           >
             <AntDesignIcon name="edit" size={24} color={colors.accent} />
           </Pressable>
