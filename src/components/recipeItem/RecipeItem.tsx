@@ -16,9 +16,9 @@ const RecipeItem = ({ recipe, onClick, type = 'tile' }: RecipeItemProps) => {
   const { editItem, deleteItem } = useDataQuery<Recipe, Partial<Recipe>>({
     storeName: 'Recipes'
   })
-  const [likeRecipe, { isLoading: isLiking }] = useLikeRecipeMutation()
+  const [likeRecipe] = useLikeRecipeMutation()
   const { data: user } = useGetUserQuery()
-  const isOwner = user?.id === recipe.added_by.id
+  const isOwner = user?.id === recipe.added_by?.id
 
   const handleLikeRecipe = useCallback(
     (id: string, value: boolean) => {

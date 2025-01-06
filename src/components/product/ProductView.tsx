@@ -29,7 +29,7 @@ const ProductView = ({ navigation, product, amount, unit, scale = 1 }: ProductVi
       carbs: Math.floor(calculated.carbs),
       kcal: CountKcal(calculated)
     }
-  }, [amount, unit, product])
+  }, [scale, amount, unit, product])
 
   const handleOnProductInfoClick = () => {
     navigation.navigate('ProductInfo', { product })
@@ -87,7 +87,9 @@ const ProductView = ({ navigation, product, amount, unit, scale = 1 }: ProductVi
             }}
           >
             <Text style={{ color: colors.neutral.text, fontWeight: '500', fontSize: 13 }}>Amount: </Text>
-            <Text style={{ color: colors.neutral.text, fontWeight: '500', fontSize: 13 }}>{`${amount} ${unit}`}</Text>
+            <Text style={{ color: colors.neutral.text, fontWeight: '500', fontSize: 13 }}>{`${
+              amount * scale
+            } ${unit}`}</Text>
           </View>
           <View
             style={{

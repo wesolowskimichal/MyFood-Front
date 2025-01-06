@@ -79,6 +79,7 @@ export interface Recipe extends _ID_URL_FIELD {
   likes: number
   is_liked: boolean
   preparation: string
+  servings: number
   products: {
     product_id: string
     amount_needed: number
@@ -129,21 +130,22 @@ export type RootStackParamList = {
     product?: ProductDetails
     meal?: Meal
     fridge?: boolean
-    recipe?: boolean
+    recipe?: { add?: boolean; edit?: Recipe }
   }
   ProductNotFound: {
     barcode: ProductBase['barcode']
     meal?: Meal
     fridge?: boolean
-    recipe?: boolean
+    recipe?: { add?: boolean; edit?: Recipe }
   }
   AddProduct: {
     barcode?: string
     meal?: Meal
     fridge?: boolean
-    recipe?: boolean
+    recipe?: { add?: boolean; edit?: Recipe }
   }
   AddRecipe: undefined
+  EditRecipe: { recipe: Recipe }
   Register: undefined
   Journal: undefined
   Test: undefined
@@ -164,6 +166,7 @@ export type FridgeScreenProps = NativeStackScreenProps<RootStackParamList, 'Frid
 export type RecipesScreenProps = NativeStackScreenProps<RootStackParamList, 'Recipes'>
 export type RecipeScreenProps = NativeStackScreenProps<RootStackParamList, 'Recipe'>
 export type AddRecipeScreenProps = NativeStackScreenProps<RootStackParamList, 'AddRecipe'>
+export type EditRecipeScreenProps = NativeStackScreenProps<RootStackParamList, 'EditRecipe'>
 export type TestScreenProps = NativeStackScreenProps<ParamListBase, 'Test'>
 
 export type NavProps = {

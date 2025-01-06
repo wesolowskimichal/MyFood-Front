@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/Store'
-import { ProductDetails, RootStackParamList, Unit } from '../../types/Types'
+import { ProductDetails, Recipe, RootStackParamList, Unit } from '../../types/Types'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import Animated, { LinearTransition, SlideInLeft, SlideOutRight } from 'react-native-reanimated'
@@ -32,12 +32,14 @@ type ProductInserterProps = {
     amount_needed: number
   }[]
   navigation: NavigationProp<RootStackParamList>
+  scale?: number
+  recipe?: Recipe
 }
 
-const ProductInserter = ({ type, setData, data, navigation }: ProductInserterProps) => {
+const ProductInserter = ({ type, setData, data, navigation, scale, recipe }: ProductInserterProps) => {
   const colors = useSelector((state: RootState) => state.theme.colors)
 
-  const { added, edited, deleted, addItem, editItem, deleteItem, isEdited, isDeleted, getEdited } = useDataQuery<
+  const { items, added, edited, deleted, addItem, editItem, deleteItem, isEdited, isDeleted, getEdited } = useDataQuery<
     ProductInsert,
     number
   >({
@@ -59,7 +61,7 @@ const ProductInserter = ({ type, setData, data, navigation }: ProductInserterPro
     })
 
     return Array.from(productMap.values())
-  }, [added, edited, deleted, isEdited, getEdited, isDeleted])
+  }, [items, added, edited, deleted, isEdited, getEdited, isDeleted])
 
   const updateProduct = useCallback(
     (id: string, amount: number) => {
@@ -69,7 +71,10 @@ const ProductInserter = ({ type, setData, data, navigation }: ProductInserterPro
   )
 
   const addProduct = useCallback(() => {
-    navigation.navigate('AddProductToComponent', { recipe: true })
+    if (recipe) {
+      return navigation.navigate('AddProductToComponent', { recipe: { edit: recipe } })
+    }
+    navigation.navigate('AddProductToComponent', { recipe: { add: true, edit: recipe } })
   }, [navigation])
 
   const removeProduct = useCallback((id: string) => {
@@ -122,8 +127,7 @@ const ProductInserter = ({ type, setData, data, navigation }: ProductInserterPro
                   navigation={navigation}
                   product_id={product_id}
                   amount_needed={amount_needed}
-                  updateProduct={updateProduct}
-                  removeProduct={removeProduct}
+                  scale={scale}
                 />
               </Animated.View>
             ))}
@@ -158,11 +162,10 @@ type IdProductProps = {
   navigation: NavigationProp<RootStackParamList>
   product_id: string
   amount_needed: number
-  updateProduct: (product_id: string, amount: number) => void
-  removeProduct: (id: string) => void
+  scale?: number
 }
 
-const IdProduct = ({ navigation, product_id, amount_needed, updateProduct, removeProduct }: IdProductProps) => {
+const IdProduct = ({ navigation, product_id, amount_needed, scale = 1 }: IdProductProps) => {
   const { data: product, error } = useGetProductbyIdQuery(product_id)
   const colors = useSelector((state: RootState) => state.theme.colors)
 
@@ -174,7 +177,9 @@ const IdProduct = ({ navigation, product_id, amount_needed, updateProduct, remov
     return <ActivityIndicator size="small" color={colors.accent} />
   }
 
-  return <ProductView navigation={navigation} product={product} amount={amount_needed} unit={product.unit} />
+  return (
+    <ProductView navigation={navigation} product={product} amount={amount_needed} unit={product.unit} scale={scale} />
+  )
 }
 
 type ProductElementProps = {

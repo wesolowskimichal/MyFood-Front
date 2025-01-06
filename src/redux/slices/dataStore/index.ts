@@ -51,7 +51,6 @@ const dataStoreSlice = createSlice({
       const store = state[action.payload.storeName]
       if (store) {
         store.edited[action.payload.data.key] = action.payload.data.value
-        console.log(store.edited)
       }
     },
     del(state, action: PayloadAction<delBody>) {

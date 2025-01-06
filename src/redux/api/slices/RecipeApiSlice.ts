@@ -27,7 +27,7 @@ type MutateRecipeBody =
       }[]
       preparation: string
       time: string
-      difficulty: 'easy' | 'medium' | 'hard'
+      difficulty: string
       servings: number
       picture?: string
     }
@@ -112,22 +112,13 @@ export const recipeApiSlice = createApi({
         method: 'POST',
         body: recipe,
         headers: recipe instanceof FormData ? {} : { 'Content-Type': 'application/json' }
-      }),
-      onQueryStarted(_recipe, { dispatch, queryFulfilled }) {
-        queryFulfilled.then(({ data }) => {
-          dispatch(
-            recipeApiSlice.util.updateQueryData('getRecipes', { page: 1 }, draft => {
-              draft.recipes.push(data)
-            })
-          )
-        })
-      }
+      })
     }),
     getRecipeById: builder.query<Recipe, string>({
       query: id => `api/recipe/${id}/`,
       providesTags: recipe => (recipe ? [{ type: 'Recipe', id: recipe.id }] : [])
     }),
-    patchRecipe: builder.query<Recipe, Partial<MutateRecipeBody> & { id: string }>({
+    patchRecipe: builder.mutation<Recipe, Partial<MutateRecipeBody> & { id: string }>({
       query: ({ id, ...recipe }) => ({
         url: `api/recipe/${id}/`,
         method: 'PATCH',
@@ -161,7 +152,8 @@ export const {
   useGetRecipesQuery,
   useAddRecipeMutation,
   useGetRecipeByIdQuery,
-  usePatchRecipeQuery,
+  useLazyGetRecipeByIdQuery,
+  usePatchRecipeMutation,
   useLikeRecipeMutation,
   useRemoveRecipeMutation
 } = recipeApiSlice
