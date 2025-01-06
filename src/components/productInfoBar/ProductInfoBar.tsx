@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useMemo } from 'react'
 import { View, Text, StyleSheet, Pressable } from 'react-native'
-import { Meal, ProductDetails, ThemeColors } from '../../types/Types'
+import { Meal, ProductDetails, Recipe, ThemeColors } from '../../types/Types'
 import Icon from 'react-native-vector-icons/Feather'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/Store'
@@ -11,7 +11,7 @@ type ProductInfoBarProps = {
   product: ProductDetails
   meal?: Meal
   fridge?: boolean
-  recipe?: boolean
+  recipe?: { add?: boolean; edit?: Recipe }
 }
 
 const ProductInfoBar = ({ navigation, product, meal, fridge, recipe }: ProductInfoBarProps) => {

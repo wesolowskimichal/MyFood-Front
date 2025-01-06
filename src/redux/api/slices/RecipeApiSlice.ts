@@ -112,16 +112,7 @@ export const recipeApiSlice = createApi({
         method: 'POST',
         body: recipe,
         headers: recipe instanceof FormData ? {} : { 'Content-Type': 'application/json' }
-      }),
-      onQueryStarted(_recipe, { dispatch, queryFulfilled }) {
-        queryFulfilled.then(({ data }) => {
-          dispatch(
-            recipeApiSlice.util.updateQueryData('getRecipes', { page: 1 }, draft => {
-              draft.recipes.push(data)
-            })
-          )
-        })
-      }
+      })
     }),
     getRecipeById: builder.query<Recipe, string>({
       query: id => `api/recipe/${id}/`,

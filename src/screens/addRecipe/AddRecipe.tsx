@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useState } from 'react'
-import { View, Text, TextInput, Switch, StyleSheet, Pressable } from 'react-native'
+import { View, Text, TextInput, Switch, StyleSheet, Pressable, ActivityIndicator } from 'react-native'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Animated, { useSharedValue, withTiming, useAnimatedStyle } from 'react-native-reanimated'
@@ -15,6 +15,7 @@ import * as ImagePicker from 'expo-image-picker'
 import * as ImageManipulator from 'expo-image-manipulator'
 import { Image } from 'expo-image'
 import { useDataQuery } from '../../redux/slices/dataStore/hooks/useDataQuery'
+import AntDesignIcon from 'react-native-vector-icons/AntDesign'
 
 const recipeSchema = z.object({
   name: z.string().min(1, { message: 'Name is required' }),
@@ -38,7 +39,8 @@ const recipeSchema = z.object({
 type recipeType = z.infer<typeof recipeSchema>
 
 const AddRecipe = ({ navigation }: AddRecipeScreenProps) => {
-  const [addRecipe, { isLoading: isAddRecipeLoading, isError: isAddRecipeError }] = useAddRecipeMutation()
+  const [addRecipe, { isLoading: isAddingRecipe, isError: isAddRecipeError, isSuccess: isAddRecipeSuccess }] =
+    useAddRecipeMutation()
   const [picture, setPicture] = useState<File | null>(null)
   const { addItem } = useDataQuery<Recipe, Partial<Recipe>>({
     storeName: 'Recipes'
@@ -97,6 +99,12 @@ const AddRecipe = ({ navigation }: AddRecipeScreenProps) => {
       cleanUp()
     }
   }, [])
+
+  useEffect(() => {
+    if (isAddRecipeSuccess) {
+      navigation.goBack()
+    }
+  }, [isAddRecipeSuccess])
 
   const getAnimatedDifficultyStyles = (levelIndex: number) => {
     return useAnimatedStyle(() => {
@@ -361,8 +369,12 @@ const AddRecipe = ({ navigation }: AddRecipeScreenProps) => {
       </Animated.View>
       <Pressable
         onPress={handleSubmit(onSubmit)}
+        disabled={isAddingRecipe}
         style={{
-          backgroundColor: colors.accent
+          backgroundColor: colors.accent,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center'
         }}
       >
         <Text
@@ -376,6 +388,8 @@ const AddRecipe = ({ navigation }: AddRecipeScreenProps) => {
         >
           ADD RECIPE
         </Text>
+        {isAddingRecipe && <ActivityIndicator color={colors.primary} />}
+        {isAddRecipeError && <AntDesignIcon name="close" size={24} color={colors.complementary.danger} />}
       </Pressable>
     </Animated.ScrollView>
   )

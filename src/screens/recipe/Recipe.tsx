@@ -1,4 +1,4 @@
-import { ColorValue, Pressable, ScrollView, Text, View } from 'react-native'
+import { ColorValue, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import { RecipeScreenProps } from '../../types/Types'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/Store'
@@ -7,7 +7,6 @@ import { Image } from 'expo-image'
 import StepCreator from '../../components/stepCreator/StepCreator'
 import ProductInserter from '../../components/productInserter/ProductInserter'
 import ScreenWrapper from '../../components/screenWrapper/ScreenWrapper'
-import { GetLikes } from '../../helpers/GetLikes'
 import { ReactNode, useEffect, useState } from 'react'
 import AntDesignIcon from 'react-native-vector-icons/AntDesign'
 import { useDataQuery } from '../../redux/slices/dataStore/hooks/useDataQuery'
@@ -18,6 +17,7 @@ const Recipe = ({ route, navigation }: RecipeScreenProps) => {
   const { data: user, isLoading: isUserLoading } = useGetUserQuery()
   const [getRecipe] = useLazyGetRecipeByIdQuery()
   const [recipe, setRecipe] = useState(_recipe)
+  const [servings, setServings] = useState(recipe.servings)
   const isOwner = user?.id === recipe.added_by.id
 
   const { items, deleteItem } = useDataQuery<{
@@ -113,11 +113,44 @@ const Recipe = ({ route, navigation }: RecipeScreenProps) => {
 
         <Section title="Description" height={120}>
           <Text style={{ color: colors.neutral.text, fontWeight: '700' }}>{`Time: ${timeFormatter(recipe.time)}`}</Text>
+          <View
+            style={{ marginBottom: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+          >
+            <Text style={{ fontSize: 16, color: colors.neutral.text, marginBottom: 8 }}>Servings</Text>
+            <TextInput
+              style={{
+                textAlign: 'center',
+                borderWidth: 1,
+                borderColor: colors.neutral.border,
+                borderRadius: 4,
+                padding: 4,
+                paddingHorizontal: 8,
+                marginBottom: 16,
+                backgroundColor: colors.neutral.surface,
+                color: colors.neutral.text
+              }}
+              keyboardType="numeric"
+              onChangeText={text => {
+                const numberValue = parseInt(text, 10)
+                if (numberValue < 0) {
+                  setServings(0)
+                } else {
+                  setServings(isNaN(numberValue) ? 0 : numberValue)
+                }
+              }}
+              value={servings.toString()}
+            />
+          </View>
           <Text>{recipe.description}</Text>
         </Section>
 
         <Section title="Products">
-          <ProductInserter type="view" navigation={navigation} data={recipe.products} />
+          <ProductInserter
+            type="view"
+            navigation={navigation}
+            data={recipe.products}
+            scale={servings / recipe.servings}
+          />
         </Section>
 
         <Section title="Steps">

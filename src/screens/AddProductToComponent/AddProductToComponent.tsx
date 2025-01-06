@@ -84,7 +84,11 @@ const AddProductToComponent = ({ navigation, route }: AddProductToComponentScree
             },
             navProduct.id
           )
-          navigation.navigate('AddRecipe')
+          if (navRecipe.add) {
+            navigation.navigate('AddRecipe')
+          } else if (navRecipe.edit) {
+            navigation.navigate('EditRecipe', { recipe: navRecipe.edit })
+          }
         }
       } catch (error) {
         console.error(error)

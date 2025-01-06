@@ -62,6 +62,7 @@ const EditRecipe = ({ navigation, route }: EditRecipeScreenProps) => {
   const {
     control,
     handleSubmit,
+    getValues,
     formState: { errors }
   } = useForm({
     resolver: zodResolver(recipeSchema),
@@ -93,15 +94,9 @@ const EditRecipe = ({ navigation, route }: EditRecipeScreenProps) => {
 
   useEffect(() => {
     slideValue.value = 0
-
-    return () => {
-      cleanUp()
-    }
   }, [])
 
   useEffect(() => {
-    cleanUp()
-
     const fetchAndAddProducts = async () => {
       try {
         for (const product of recipe.products) {
@@ -381,7 +376,14 @@ const EditRecipe = ({ navigation, route }: EditRecipeScreenProps) => {
             name="products"
             control={control}
             render={({ field: { onChange } }) => (
-              <ProductInserter type="add" setData={onChange} navigation={navigation} />
+              <ProductInserter
+                type="add"
+                setData={onChange}
+                navigation={navigation}
+                recipe={{
+                  ...getValues()
+                }}
+              />
             )}
           />
           {errors.products && <Text style={styles.errorText}>{errors.products.message as string}</Text>}
@@ -389,6 +391,7 @@ const EditRecipe = ({ navigation, route }: EditRecipeScreenProps) => {
       </Animated.View>
       <Pressable
         onPress={handleSubmit(onSubmit)}
+        disabled={isRecipeEditing}
         style={{
           backgroundColor: colors.accent,
           flexDirection: 'row',
