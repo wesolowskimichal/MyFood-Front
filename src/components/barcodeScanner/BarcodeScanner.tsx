@@ -4,14 +4,15 @@ import Loader from '../loader/Loader'
 import { Pressable, StyleSheet, Text, View, Animated, Easing } from 'react-native'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/Store'
-import { ThemeColors } from '../../types/Types'
+import { Meal, ThemeColors } from '../../types/Types'
 import Icon from 'react-native-vector-icons/Ionicons'
 
 type BarcodeScannerProps = {
   onBarcodeScanned: (barcode: BarcodeScanningResult) => Promise<void>
+  journalAdd?: Meal
 }
 
-const BarcodeScanner = ({ onBarcodeScanned }: BarcodeScannerProps) => {
+const BarcodeScanner = ({ onBarcodeScanned, journalAdd }: BarcodeScannerProps) => {
   const [facing, setFacing] = useState<'front' | 'back'>('back')
   const [cameraFlash, setCameraFlash] = useState(false)
   const [permission, requestPermission] = useCameraPermissions()
@@ -110,6 +111,32 @@ const BarcodeScanner = ({ onBarcodeScanned }: BarcodeScannerProps) => {
           </View>
           <View style={styles.overlayBottom} />
         </View>
+        {journalAdd && (
+          <Pressable
+            style={{
+              borderWidth: 1,
+              borderColor: colors.accent,
+              alignItems: 'center',
+              justifyContent: 'center',
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+              borderRadius: 4
+            }}
+            onPress={() =>
+              onBarcodeScanned({
+                type: 'recipe',
+                data: 'recipe',
+                cornerPoints: [],
+                bounds: {
+                  origin: { x: 0, y: 0 },
+                  size: { width: 0, height: 0 }
+                }
+              })
+            }
+          >
+            <Text style={{ fontSize: 14, fontWeight: '800', color: colors.accent }}>Add Recipe</Text>
+          </Pressable>
+        )}
         <View style={styles.buttonContainer}>
           <Pressable style={styles.flashButton} onPress={handleFlashToggle}>
             <Icon name={cameraFlash ? 'flash-off-outline' : 'flash-outline'} size={24} color={colors.neutral.text} />

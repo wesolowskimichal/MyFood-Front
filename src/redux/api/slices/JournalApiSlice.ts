@@ -1,12 +1,12 @@
 import { createApi } from '@reduxjs/toolkit/query/react'
 import { baseQueryWithReauth } from '../queries/BaseQueryReauth'
-import { Journal, JournalPage, Meal, ProductDetails } from '../../../types/Types'
+import { Journal, JournalPage, Meal, ProductDetails, Recipe } from '../../../types/Types'
 import { getDate } from '../../../helpers/GetDate'
 
 type JournalQuery = { year: number; month: number; day: number }
 export type MutationJournalPayloadBody = {
   object_type: 'product' | 'recipe'
-  object: ProductDetails
+  object: ProductDetails | Recipe
   date: Date
   object_amount: number
   meal: Meal

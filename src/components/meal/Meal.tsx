@@ -1,5 +1,13 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
-import { JournalMeal, Nutrients, ProductDetails, RootStackParamList, ThemeColors, Unit } from '../../types/Types'
+import {
+  Recipe as IRecipe,
+  JournalMeal,
+  Nutrients,
+  ProductDetails,
+  RootStackParamList,
+  ThemeColors,
+  Unit
+} from '../../types/Types'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/Store'
@@ -12,6 +20,7 @@ import { UnitProductConverter } from '../../helpers/UnitAmountConverter'
 import { NavigationProp } from '@react-navigation/native'
 import { useDeleteJournalMutation, usePatchJournalMutation } from '../../redux/api/slices/JournalApiSlice'
 import debounce from 'lodash/debounce'
+import Recipe from '../recipe/Recipe'
 
 type MealProps = {
   navigation: NavigationProp<RootStackParamList>
@@ -19,9 +28,11 @@ type MealProps = {
   onNutrientsChange: (carbsDiff: number, proteinsDiff: number, fatsDiff: number) => void
 }
 
-const Meal = ({ navigation, journalMeal, onNutrientsChange }: MealProps) => {
-  console.log(`meal: ${journalMeal.meal.name} rerender`)
+function isProductDetails(obj: any): obj is ProductDetails {
+  return obj && typeof obj.barcode === 'string'
+}
 
+const Meal = ({ navigation, journalMeal, onNutrientsChange }: MealProps) => {
   const [patchJournal] = usePatchJournalMutation()
   const [removeProductFromJournal, { isLoading: isRemovingProductFromJournal }] = useDeleteJournalMutation()
 
@@ -53,11 +64,16 @@ const Meal = ({ navigation, journalMeal, onNutrientsChange }: MealProps) => {
     setAmounts(prev => ({ ...prev, [product.id]: newAmount }))
   }, [])
 
+  const recipeDestructor = useCallback((recipe: IRecipe, servings: number) => {
+    setAmounts(prev => ({ ...prev, [recipe.id]: servings }))
+  }, [])
+
   const debouncedPatchJournal = useCallback(
-    debounce((amount: number, object: ProductDetails) => {
+    debounce((amount: number, object: ProductDetails | IRecipe) => {
       if (!journalMeal.journalId) return
+      const object_type = isProductDetails(object) ? 'product' : 'recipe'
       patchJournal({
-        body: { meal: journalMeal.meal, object_type: 'product', object_amount: amount, object, date: new Date() },
+        body: { meal: journalMeal.meal, object_type, object_amount: amount, object, date: new Date() },
         journalId: journalMeal.journalId
       })
     }, 1000),
@@ -71,6 +87,17 @@ const Meal = ({ navigation, journalMeal, onNutrientsChange }: MealProps) => {
       setCarbs(prev => Math.floor(prev - carbsDiff))
       onNutrientsChange(carbsDiff, proteinsDiff, fatsDiff)
       debouncedPatchJournal(amount, object)
+    },
+    [onNutrientsChange, debouncedPatchJournal]
+  )
+
+  const handleOnRecipeNutrientsChange = useCallback(
+    (carbsDiff: number, proteinsDiff: number, fatsDiff: number, servings: number, object: IRecipe) => {
+      setProteins(prev => Math.floor(prev - proteinsDiff))
+      setFats(prev => Math.floor(prev - fatsDiff))
+      setCarbs(prev => Math.floor(prev - carbsDiff))
+      onNutrientsChange(carbsDiff, proteinsDiff, fatsDiff)
+      debouncedPatchJournal(servings, object)
     },
     [onNutrientsChange, debouncedPatchJournal]
   )
@@ -134,17 +161,29 @@ const Meal = ({ navigation, journalMeal, onNutrientsChange }: MealProps) => {
       </CollapsibleHeader>
       <CollapsibleContent itemStyle={styles.CollapsibleContent}>
         <View style={styles.MealDetails}>
-          {journalMeal.elements.map((element, index) => (
-            <Product
-              key={`${element.obj.id}-${index}`}
-              navigation={navigation}
-              product={element.obj}
-              defaultAmount={amounts[element.obj.id]}
-              onNutrientsChange={handleOnNutrientsChange}
-              onProductRemove={handleOnProductRemove}
-              destructor={productDestructor}
-            />
-          ))}
+          {journalMeal.elements.map((element, index) =>
+            isProductDetails(element.obj) ? (
+              <Product
+                key={`${element.obj.id}-${index}`}
+                navigation={navigation}
+                product={element.obj}
+                defaultAmount={amounts[element.obj.id]}
+                onNutrientsChange={handleOnNutrientsChange}
+                onProductRemove={handleOnProductRemove}
+                destructor={productDestructor}
+              />
+            ) : (
+              <Recipe
+                key={`${element.obj.id}-${index}`}
+                navigation={navigation}
+                recipe={element.obj}
+                defaultServings={amounts[element.obj.id]}
+                onNutrientsChange={handleOnRecipeNutrientsChange}
+                onRecipeRemove={handleOnProductRemove}
+                destructor={recipeDestructor}
+              />
+            )
+          )}
         </View>
       </CollapsibleContent>
     </Collapsible>

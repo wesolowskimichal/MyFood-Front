@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react'
 import { FlatList, StyleSheet, Text, View, TextInput, Pressable } from 'react-native'
-import { RecipesScreenProps, ThemeColors, Recipe as IRecipe, Recipe } from '../../types/Types'
+import { ThemeColors, Recipe as IRecipe, RecipesListScreenProps, Meal } from '../../types/Types'
 import { useGetRecipesQuery } from '../../redux/api/slices/RecipeApiSlice'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/Store'
@@ -8,15 +8,14 @@ import ListItemSkeleton from '../../components/listItemSkeleton/ListItemSkeleton
 import ScreenWrapper from '../../components/screenWrapper/ScreenWrapper'
 import Icon from 'react-native-vector-icons/Feather'
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons'
-import EmbeddedSwitch from '../../components/embeddedSwitch/EmbeddedSwitch'
 import Loader from '../../components/loader/Loader'
 import UpperLoader from '../../components/upperLoader/UpperLoader'
-import RecipeItem from '../../components/recipeItem/RecipeItem'
-import { useDataQuery } from '../../redux/slices/dataStore/hooks/useDataQuery'
-import Animated, { SlideInLeft, SlideOutRight } from 'react-native-reanimated'
+import Animated, { LinearTransition, SlideInLeft, SlideOutRight } from 'react-native-reanimated'
 import { useGetUserQuery } from '../../redux/api/slices/UserApiSlice'
+import { Image } from 'expo-image'
 
-const Recipes = ({ navigation }: RecipesScreenProps) => {
+const RecipesList = ({ navigation, route }: RecipesListScreenProps) => {
+  const { meal } = route.params
   const colors = useSelector((state: RootState) => state.theme.colors)
   const styles = useMemo(() => createStyles(colors), [colors])
 
@@ -26,21 +25,16 @@ const Recipes = ({ navigation }: RecipesScreenProps) => {
     name: undefined
   })
 
-  const { items } = useDataQuery<Recipe, Partial<Recipe>>({
-    storeName: 'Recipes'
-  })
-  const [viewType, setViewType] = useState<'tile' | 'list'>('tile')
   const [page, setPage] = useState(1)
+  const [servings, setServings] = useState(1)
 
   const {
-    data: { recipes: recipesApi, isFinished } = { recipes: [], isFinished: true },
+    data: { recipes, isFinished } = { recipes: [], isFinished: true },
     isLoading,
     isFetching
   } = useGetRecipesQuery({ page, filters })
 
   const { data: user, isLoading: isUserLoading } = useGetUserQuery()
-
-  const recipes = useMemo(() => items('id', recipesApi), [items, recipesApi])
 
   const handleLoadMoreRecipes = useCallback(() => {
     if (!isFetching && !isFinished) {
@@ -48,24 +42,9 @@ const Recipes = ({ navigation }: RecipesScreenProps) => {
     }
   }, [isFetching, recipes])
 
-  const handleOnRecipeClick = useCallback(
-    (recipe: IRecipe) => {
-      navigation.navigate('Recipe', { recipe })
-    },
-    [navigation]
-  )
-
   const renderItem = ({ item }: { item: IRecipe }) => {
-    return <RecipeItem key={item.id} recipe={item} type={viewType} onClick={handleOnRecipeClick} />
+    return <RecipeInfoBar key={item.id} recipe={item} navigation={navigation} servings={servings} meal={meal} />
   }
-
-  const handleSwitchToggle = useCallback(() => {
-    setViewType(prevType => (prevType === 'tile' ? 'list' : 'tile'))
-  }, [])
-
-  const handleOnAddRecipeClick = useCallback(() => {
-    navigation.navigate('AddRecipe')
-  }, [navigation])
 
   const areFiltersEmpty = useMemo(
     () => Object.values(filters).every(value => (value === undefined ? true : value === '' || !value)),
@@ -86,15 +65,6 @@ const Recipes = ({ navigation }: RecipesScreenProps) => {
             onChangeText={text => setFilters({ ...filters, name: text })}
             placeholder="Search recipe"
             placeholderTextColor={colors.neutral.border}
-          />
-          <EmbeddedSwitch
-            leftOption={
-              <Icon name="grid" size={20} color={viewType === 'tile' ? colors.accent : colors.neutral.border} />
-            }
-            rightOption={
-              <Icon name="list" size={20} color={viewType === 'list' ? colors.accent : colors.neutral.border} />
-            }
-            onSwitchToggle={handleSwitchToggle}
           />
         </View>
         <View
@@ -142,20 +112,32 @@ const Recipes = ({ navigation }: RecipesScreenProps) => {
             </Text>
           </Pressable>
         </View>
-        {viewType === 'list' && (
-          <Pressable
-            onPress={handleOnAddRecipeClick}
+        <View style={{ marginBottom: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around' }}>
+          <Text style={{ fontSize: 14, color: colors.neutral.text, marginBottom: 8 }}>Servings</Text>
+          <TextInput
             style={{
-              backgroundColor: colors.accent,
-              paddingVertical: 8,
-              marginHorizontal: 36,
+              textAlign: 'center',
+              borderWidth: 1,
+              borderColor: colors.neutral.border,
               borderRadius: 4,
-              marginBottom: 8
+              padding: 4,
+              paddingHorizontal: 8,
+              marginBottom: 16,
+              backgroundColor: colors.neutral.surface,
+              color: colors.neutral.text
             }}
-          >
-            <Text style={{ textAlign: 'center', color: colors.primary, fontWeight: '600' }}>ADD RECIPE</Text>
-          </Pressable>
-        )}
+            keyboardType="numeric"
+            onChangeText={text => {
+              const numberValue = parseInt(text, 10)
+              if (numberValue < 0) {
+                setServings(0)
+              } else {
+                setServings(isNaN(numberValue) ? 0 : numberValue)
+              }
+            }}
+            value={servings.toString()}
+          />
+        </View>
       </View>
       {isFetching && <UpperLoader />}
       {!isFetching && !isLoading && recipes.length === 0 ? (
@@ -168,10 +150,6 @@ const Recipes = ({ navigation }: RecipesScreenProps) => {
             ) : (
               <Text style={styles.suggestionText}>Try changing your filters</Text>
             )}
-            <Pressable onPress={handleOnAddRecipeClick} style={styles.addRecipeButton}>
-              <MaterialIcon name="add" size={24} color="#CD5C5C" />
-              <Text style={styles.addRecipeButtonText}>Add Recipe</Text>
-            </Pressable>
           </View>
         </View>
       ) : (
@@ -184,29 +162,131 @@ const Recipes = ({ navigation }: RecipesScreenProps) => {
           }}
         >
           <FlatList
-            key={viewType}
             data={recipes}
-            numColumns={viewType === 'tile' ? 2 : 1}
             style={{ paddingHorizontal: 5 }}
             renderItem={renderItem}
             keyExtractor={item => item.id}
             onEndReached={handleLoadMoreRecipes}
             onEndReachedThreshold={0.5}
             contentContainerStyle={{ gap: 10 }}
-            columnWrapperStyle={viewType === 'tile' && { gap: 10 }}
             ListFooterComponent={isFinished ? null : <ListItemSkeleton width="100%" height={100} borderRadius={4} />}
           />
         </Animated.View>
-      )}
-      {viewType === 'tile' && (
-        <Pressable style={styles.addRecipeIconButton} onPress={handleOnAddRecipeClick}>
-          <MaterialIcon name="add" size={32} color={colors.accent} />
-        </Pressable>
       )}
     </ScreenWrapper>
   )
 }
 
+const RecipeInfoBar = ({
+  recipe,
+  navigation,
+  servings,
+  meal
+}: {
+  recipe: IRecipe
+  navigation: RecipesListScreenProps['navigation']
+  servings: number
+  meal?: Meal
+}) => {
+  const colors = useSelector((state: RootState) => state.theme.colors)
+
+  const scale = servings / recipe.servings
+
+  const handleOnRecipeInfoClick = () => {
+    navigation.navigate('Recipe', { recipe })
+  }
+
+  const handleOnRecipeClick = () => {
+    navigation.navigate('AddProductToComponent', { meal, journalRecipe: { ...recipe, servings } })
+  }
+
+  return (
+    <Animated.View
+      layout={LinearTransition.springify()}
+      entering={SlideInLeft}
+      exiting={SlideOutRight}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderRadius: 4,
+        paddingHorizontal: 6,
+        paddingVertical: 4,
+        backgroundColor: colors.neutral.surface,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 5,
+        marginBottom: 10
+      }}
+    >
+      <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+        <Image source={{ uri: recipe.picture }} style={{ width: 60, height: 60, borderRadius: 4, marginRight: 12 }} />
+        <View style={{ flex: 1, justifyContent: 'center' }}>
+          <View
+            style={{
+              flex: 1,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginVertical: 4
+            }}
+          >
+            <Text
+              style={{ fontSize: 16, fontWeight: '600', color: colors.neutral.text, marginBottom: 4 }}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {recipe.name}
+            </Text>
+            <Pressable onPress={handleOnRecipeInfoClick}>
+              <Icon name="info" size={14} color={colors.accent} />
+            </Pressable>
+          </View>
+          <Text style={{ color: colors.neutral.text, fontSize: 12 }}>Difficulty: {recipe.difficulty}</Text>
+          <Text style={{ color: colors.neutral.text, fontSize: 12 }}>Likes: {recipe.likes}</Text>
+          <View
+            style={{
+              flexDirection: 'row',
+              marginBottom: 8,
+              justifyContent: 'space-between'
+            }}
+          >
+            <Text
+              style={{ color: colors.neutral.text, flex: 1, fontSize: 12, textAlign: 'center' }}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {`P: ${Math.floor(recipe.protein * scale)}`}
+            </Text>
+            <Text
+              style={{ color: colors.neutral.text, flex: 1, fontSize: 12, textAlign: 'center' }}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >{`C: ${Math.floor(recipe.carbons * scale)}`}</Text>
+            <Text
+              style={{ color: colors.neutral.text, flex: 1, fontSize: 12, textAlign: 'center' }}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >{`F: ${Math.floor(recipe.fat * scale)}`}</Text>
+          </View>
+          <Pressable
+            style={{
+              justifyContent: 'center',
+              alignItems: 'center',
+              flexDirection: 'row',
+              borderWidth: 2,
+              borderColor: colors.accent
+            }}
+            onPress={handleOnRecipeClick}
+          >
+            <Text style={{ color: colors.accent, fontWeight: '800', fontSize: 14 }}>Add</Text>
+          </Pressable>
+        </View>
+      </View>
+    </Animated.View>
+  )
+}
 const createStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     searchRow: {
@@ -222,8 +302,7 @@ const createStyles = (colors: ThemeColors) =>
       color: colors.neutral.text,
       borderWidth: 1,
       borderRadius: 4,
-      padding: 10,
-      marginRight: 10
+      padding: 10
     },
     recipeItem: {
       flex: 1,
@@ -277,4 +356,4 @@ const createStyles = (colors: ThemeColors) =>
     }
   })
 
-export default Recipes
+export default RecipesList

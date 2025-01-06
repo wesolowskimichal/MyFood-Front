@@ -84,6 +84,9 @@ export interface Recipe extends _ID_URL_FIELD {
     product_id: string
     amount_needed: number
   }[]
+  carbons: number
+  fat: number
+  protein: number
 }
 
 export interface Journal extends _ID_URL_FIELD {
@@ -91,8 +94,8 @@ export interface Journal extends _ID_URL_FIELD {
   object: {
     type: 'product' | 'recipe'
     meal: Meal
-    // entry: ProductDetails | Recipe
-    entry: ProductDetails
+    entry: ProductDetails | Recipe
+    // entry: ProductDetails
     amount: number
   }
 }
@@ -101,8 +104,8 @@ export interface JournalMeal {
   journalId?: string
   meal: Meal
   elements: {
-    // obj: ProductDetails | Recipe
-    obj: ProductDetails
+    obj: ProductDetails | Recipe
+    // obj: ProductDetails
     amount: number
   }[]
 }
@@ -128,6 +131,7 @@ export type RootStackParamList = {
   ProductInfo: { product: ProductDetails }
   AddProductToComponent: {
     product?: ProductDetails
+    journalRecipe?: Recipe
     meal?: Meal
     fridge?: boolean
     recipe?: { add?: boolean; edit?: Recipe }
@@ -146,6 +150,9 @@ export type RootStackParamList = {
   }
   AddRecipe: undefined
   EditRecipe: { recipe: Recipe }
+  RecipesList: {
+    meal?: Meal
+  }
   Register: undefined
   Journal: undefined
   Test: undefined
@@ -164,6 +171,7 @@ export type AddProductToComponentScreenProps = NativeStackScreenProps<RootStackP
 export type ProductInfoScreenProps = NativeStackScreenProps<RootStackParamList, 'ProductInfo'>
 export type FridgeScreenProps = NativeStackScreenProps<RootStackParamList, 'Fridge'>
 export type RecipesScreenProps = NativeStackScreenProps<RootStackParamList, 'Recipes'>
+export type RecipesListScreenProps = NativeStackScreenProps<RootStackParamList, 'RecipesList'>
 export type RecipeScreenProps = NativeStackScreenProps<RootStackParamList, 'Recipe'>
 export type AddRecipeScreenProps = NativeStackScreenProps<RootStackParamList, 'AddRecipe'>
 export type EditRecipeScreenProps = NativeStackScreenProps<RootStackParamList, 'EditRecipe'>

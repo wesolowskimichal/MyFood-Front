@@ -19,7 +19,6 @@ const ProductInfoBar = ({ navigation, product, meal, fridge, recipe }: ProductIn
   const styles = useMemo(() => createStyles(colors), [colors])
 
   const handleProductSelect = useCallback(() => {
-    console.log({ meal, fridge, recipe })
     navigation.navigate('AddProductToComponent', { product, meal, fridge, recipe })
   }, [])
 

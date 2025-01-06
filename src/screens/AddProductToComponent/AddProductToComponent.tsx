@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
 import BarcodeScanner from '../../components/barcodeScanner/BarcodeScanner'
 import ScreenWrapper from '../../components/screenWrapper/ScreenWrapper'
 import { useLazyGetProductQuery } from '../../redux/api/slices/ProductApiSlice'
@@ -7,7 +7,7 @@ import Loader from '../../components/loader/Loader'
 import { usePostJournalMutation } from '../../redux/api/slices/JournalApiSlice'
 import { UnitProductConverter } from '../../helpers/UnitAmountConverter'
 import AddProductForm from '../../forms/AddProductForm'
-import { AddProductToComponentScreenProps, Unit } from '../../types/Types'
+import { AddProductToComponentScreenProps, Meal, Recipe, Unit } from '../../types/Types'
 import { useAddFridgeProductMutation } from '../../redux/api/slices/FridgeApiSlice'
 import { useDataQuery } from '../../redux/slices/dataStore/hooks/useDataQuery'
 
@@ -17,6 +17,7 @@ const AddProductToComponent = ({ navigation, route }: AddProductToComponentScree
   const [addProductToFridge, { isLoading: isAddingProductToFridge }] = useAddFridgeProductMutation()
   const navProduct = route.params?.product ?? null
   const navMeal = route.params.meal
+  const journalRecipe = route.params.journalRecipe
   const navFridge = route.params.fridge
   const navRecipe = route.params.recipe
   const storeName = navMeal ? 'Journal' : navFridge ? 'Fridge' : 'ProductInsert'
@@ -27,6 +28,10 @@ const AddProductToComponent = ({ navigation, route }: AddProductToComponentScree
   const handleProductScan = useCallback(
     async (barcode: BarcodeScanningResult) => {
       try {
+        if (barcode.type === 'recipe') {
+          navigation.navigate('RecipesList', { meal: navMeal })
+          return
+        }
         const response = await getProduct(barcode.data, true).unwrap()
         navigation.navigate('AddProductToComponent', {
           product: response,
@@ -52,6 +57,15 @@ const AddProductToComponent = ({ navigation, route }: AddProductToComponentScree
       if (!navProduct || !(navMeal || navFridge || navRecipe)) return
       try {
         if (navMeal) {
+          if (journalRecipe) {
+            await addProductToJournal({
+              object: journalRecipe,
+              object_amount: journalRecipe.servings,
+              object_type: 'product',
+              date: new Date(),
+              meal: navMeal
+            })
+          }
           await addProductToJournal({
             object: navProduct,
             object_amount: UnitProductConverter(amount, unit, navProduct),
@@ -97,6 +111,24 @@ const AddProductToComponent = ({ navigation, route }: AddProductToComponentScree
     [navigation, navProduct, navMeal, navRecipe]
   )
 
+  useEffect(() => {
+    const addRecipeToJournal = async (recipe: Recipe, meal: Meal) => {
+      await addProductToJournal({
+        object: recipe,
+        object_amount: recipe.servings,
+        object_type: 'recipe',
+        date: new Date(),
+        meal: meal
+      })
+    }
+    console.log({ journalRecipe, navMeal })
+    if (journalRecipe && navMeal) {
+      console.log('success')
+      addRecipeToJournal(journalRecipe, navMeal)
+      navigation.navigate('Journal')
+    }
+  }, [journalRecipe, navMeal])
+
   if (isProductLoading || isAddingProductToJournal || isAddingProductToFridge || isProductFetching) {
     return <Loader />
   }
@@ -106,7 +138,7 @@ const AddProductToComponent = ({ navigation, route }: AddProductToComponentScree
       {navProduct ? (
         <AddProductForm product={navProduct} onSubmit={handleOnSubmit} />
       ) : (
-        <BarcodeScanner onBarcodeScanned={handleProductScan} />
+        <BarcodeScanner onBarcodeScanned={handleProductScan} journalAdd={navMeal} />
       )}
     </ScreenWrapper>
   )

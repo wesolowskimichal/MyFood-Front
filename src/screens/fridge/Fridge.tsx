@@ -103,7 +103,7 @@ const Fridge = ({ navigation }: FridgeScreenProps) => {
               value={filters['product-name']}
               onChangeText={text => setFilters({ ...filters, 'product-name': text })}
               placeholder="Search product"
-              placeholderTextColor={colors.neutral.text}
+              placeholderTextColor={colors.neutral.border}
             />
             <EmbeddedSwitch
               leftOption={

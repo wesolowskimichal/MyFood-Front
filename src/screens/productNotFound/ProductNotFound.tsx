@@ -90,7 +90,7 @@ const ProductNotFound = ({ navigation, route }: ProductNotFoundScreenProps) => {
           onChangeText={handleSearchInput}
           style={[styles.input, { borderColor: colors.neutral.border, color: colors.neutral.text }]}
           placeholder="Search..."
-          placeholderTextColor={colors.neutral.text}
+          placeholderTextColor={colors.neutral.border}
         />
         <Pressable
           onPress={() => navigation.navigate('AddProduct', { barcode, meal, fridge, recipe })}

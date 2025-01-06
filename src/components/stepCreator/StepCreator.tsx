@@ -73,7 +73,7 @@ const StepCreator = ({ type, data, setData }: StepCreatorProps) => {
                   value={step}
                   onChangeText={text => updateStep(text, index)}
                   placeholder="Edit step"
-                  placeholderTextColor={colors.neutral.text}
+                  placeholderTextColor={colors.neutral.border}
                   style={{
                     flex: 1,
                     color: colors.neutral.text
@@ -158,7 +158,7 @@ const StepCreator = ({ type, data, setData }: StepCreatorProps) => {
             value={newStep}
             onChangeText={setNewStep}
             placeholder="Enter new step"
-            placeholderTextColor={colors.neutral.text}
+            placeholderTextColor={colors.neutral.border}
             style={{
               marginBottom: 12,
               paddingVertical: 2,
