@@ -14,14 +14,15 @@ import UpperLoader from '../../components/upperLoader/UpperLoader'
 import RecipeItem from '../../components/recipeItem/RecipeItem'
 import { useDataQuery } from '../../redux/slices/dataStore/hooks/useDataQuery'
 import Animated, { SlideInLeft, SlideOutRight } from 'react-native-reanimated'
+import { useGetUserQuery } from '../../redux/api/slices/UserApiSlice'
 
 const Recipes = ({ navigation }: RecipesScreenProps) => {
   const colors = useSelector((state: RootState) => state.theme.colors)
   const styles = useMemo(() => createStyles(colors), [colors])
 
   const [filters, setFilters] = useState<Record<string, any>>({
-    'is-liked': false,
-    shared: false,
+    is_liked: undefined,
+    user: undefined,
     name: undefined
   })
 
@@ -36,6 +37,8 @@ const Recipes = ({ navigation }: RecipesScreenProps) => {
     isLoading,
     isFetching
   } = useGetRecipesQuery({ page, filters })
+
+  const { data: user, isLoading: isUserLoading } = useGetUserQuery()
 
   const recipes = useMemo(() => items('id', recipesApi), [items, recipesApi])
 
@@ -69,7 +72,7 @@ const Recipes = ({ navigation }: RecipesScreenProps) => {
     [filters]
   )
 
-  if (isLoading && page === 1) {
+  if ((isLoading && page === 1) || isUserLoading) {
     return <Loader />
   }
 
@@ -93,6 +96,51 @@ const Recipes = ({ navigation }: RecipesScreenProps) => {
             }
             onSwitchToggle={handleSwitchToggle}
           />
+        </View>
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-around',
+            marginBottom: 10,
+            backgroundColor: colors.neutral.border,
+            padding: 8,
+            borderRadius: 4,
+            marginHorizontal: 5
+          }}
+        >
+          <Pressable onPress={() => setFilters({ ...filters, is_liked: true, user: undefined })}>
+            <Text
+              style={{
+                color: filters.is_liked ? colors.accent : colors.neutral.background,
+                fontSize: 15,
+                fontWeight: '700'
+              }}
+            >
+              Liked Recipes
+            </Text>
+          </Pressable>
+          <Pressable onPress={() => setFilters({ ...filters, is_liked: undefined, user: undefined })}>
+            <Text
+              style={{
+                color: !filters.is_liked && !filters.user ? colors.accent : colors.neutral.background,
+                fontSize: 15,
+                fontWeight: '700'
+              }}
+            >
+              All recipes
+            </Text>
+          </Pressable>
+          <Pressable onPress={() => setFilters({ ...filters, is_liked: undefined, user: user?.id })}>
+            <Text
+              style={{
+                color: filters.user ? colors.accent : colors.neutral.background,
+                fontSize: 15,
+                fontWeight: '700'
+              }}
+            >
+              My Recipes
+            </Text>
+          </Pressable>
         </View>
         {viewType === 'list' && (
           <Pressable

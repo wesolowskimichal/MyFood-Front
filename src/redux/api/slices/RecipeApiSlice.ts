@@ -5,8 +5,7 @@ import { Recipe, RecipePage, User } from '../../../types/Types'
 type GetRecipesQueryParams = {
   page: number
   filters?: {
-    'is-liked'?: boolean
-    shared?: boolean
+    is_liked?: boolean
     name?: string
     user?: User['id']
   }
