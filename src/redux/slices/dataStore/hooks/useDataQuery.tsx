@@ -43,6 +43,18 @@ export const useDataQuery = <TA, TE = TA>({ storeName }: DataQuery) => {
     [dispatch, store, storeName]
   )
 
+  const addBulk = useCallback(
+    (items: TA[], key?: string) => {
+      if (!store) {
+        initializeStore()
+      }
+      items.forEach(item => {
+        dispatch(add({ storeName, data: item, key }))
+      })
+    },
+    [dispatch, store, storeName]
+  )
+
   const editItem = useCallback(
     (key: string, value: TE) => {
       if (!store) {
@@ -108,5 +120,5 @@ export const useDataQuery = <TA, TE = TA>({ storeName }: DataQuery) => {
     [store, data, isEdited, getEdited, isDeleted]
   )
 
-  return { ...data, addItem, cleanUp, editItem, isEdited, getEdited, deleteItem, isDeleted, items }
+  return { ...data, addBulk, addItem, cleanUp, editItem, isEdited, getEdited, deleteItem, isDeleted, items }
 }

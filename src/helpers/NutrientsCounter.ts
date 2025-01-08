@@ -1,4 +1,4 @@
-import { JournalMeal, Nutrients, ProductDetails, Unit } from '../types/Types'
+import { JournalEntry, Nutrients, ProductDetails, Recipe, Unit } from '../types/Types'
 
 /**
  * Calculates the nutrients (proteins, fats, carbs) in a given amount of a product.
@@ -37,16 +37,24 @@ export const NutrientsCounter = (amount: number, unit: Unit, product: ProductTyp
 /**
  * Calculates the total nutrients (proteins, fats, carbs) for a meal from the journal. Use only on init because it works on db unit
  *
- * @param {JournalMeal} journalMeal - The journal meal containing elements with their respective amounts and product details.
+ * @param {JournalEntry} journalEntry - The journal meal containing elements with their respective amounts and product details.
  * @returns {Nutrients} - The total calculated nutrients for the meal.
  */
-export const NutrientsCounterMap = (journalMeal: JournalMeal): Nutrients => {
-  return journalMeal.elements.reduce(
-    (acc, curr) => ({
-      proteins: acc.proteins + curr.amount * (curr.obj.protein / curr.obj.amount),
-      fats: acc.fats + curr.amount * (curr.obj.fat / curr.obj.amount),
-      carbs: acc.carbs + curr.amount * (curr.obj.carbons / curr.obj.amount)
-    }),
+export const NutrientsCounterMap = (journalEntry: JournalEntry): Nutrients => {
+  return journalEntry.journal_entities.reduce(
+    (acc, curr) => {
+      const objAmount = () => {
+        if (curr.object.type === 'product') {
+          return (curr.object.entry as ProductDetails).amount
+        }
+        return (curr.object.entry as Recipe).servings
+      }
+      return {
+        proteins: acc.proteins + curr.object.amount * (curr.object.entry.protein / objAmount()),
+        fats: acc.fats + curr.object.amount * (curr.object.entry.fat / objAmount()),
+        carbs: acc.carbs + curr.object.amount * (curr.object.entry.carbons / objAmount())
+      }
+    },
     {
       proteins: 0,
       fats: 0,
