@@ -1,28 +1,23 @@
 import { ActivityIndicator, Button, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useGetJournalsByDateQuery } from '../../redux/api/slices/JournalApiSlice'
-import { JournalMeal, JournalScreenProps, Nutrients, ThemeColors } from '../../types/Types'
+import { JournalEntry, JournalEntity, JournalScreenProps, Nutrients, ThemeColors } from '../../types/Types'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '../../redux/Store'
 import ScreenWrapper from '../../components/screenWrapper/ScreenWrapper'
-import { useGetMealsQuery } from '../../redux/api/slices/UserMealSlice'
 import Meal from '../../components/meal/Meal'
 import NutrientsBar from '../../components/nutrientsBar/NutrientsBar'
-import { NutrientsCounterMap } from '../../helpers/NutrientsCounter'
-import Loader from '../../components/loader/Loader'
 import { getDate } from '../../helpers/GetDate'
-// import DateTimePicker from '@react-native-community/datetimepicker'
 import DateTimePicker from 'react-native-modal-datetime-picker'
 import FeatherIcon from 'react-native-vector-icons/Feather'
 import { toggleTheme } from '../../redux/slices/ThemeSlice'
+import { NutrientsCounterMap } from '../../helpers/NutrientsCounter'
 
-const Journal = ({ navigation, route }: JournalScreenProps) => {
-  // for theme tests only
+const Journal = ({ navigation }: JournalScreenProps) => {
   const dispatch = useDispatch<AppDispatch>()
 
   const [date, setDate] = useState<Date>(new Date())
   const [showDatePicker, setShowDatePicker] = useState(false)
-  const [journalMeals, setJournalMeals] = useState<JournalMeal[]>([])
 
   const [proteins, setProteins] = useState(0)
   const [fats, setFats] = useState(0)
@@ -32,63 +27,11 @@ const Journal = ({ navigation, route }: JournalScreenProps) => {
   const styles = useMemo(() => createStyles(colors), [colors])
 
   const {
-    data: journalEntries,
-    error: journalEntriesError,
-    isLoading: journalEntriesLoading,
-    isFetching: journalEntriesFetching
+    data: journal,
+    error: isJournalError,
+    isLoading: isJournalLoading,
+    isFetching: isJournalFetching
   } = useGetJournalsByDateQuery(getDate(date))
-
-  const { data: meals, error: mealsError, isLoading: mealsLoading, isFetching: mealsFetching } = useGetMealsQuery()
-
-  useEffect(() => {
-    if (journalEntries && meals) {
-      const journalMealsMap = meals.results.reduce((acc, meal) => {
-        acc.set(meal.id, { meal, elements: [] })
-        return acc
-      }, new Map<string, JournalMeal>())
-
-      if (Array.isArray(journalEntries)) {
-        journalEntries.reduce((acc, entry) => {
-          const mealId = entry.object.meal.id
-          if (!acc.has(mealId)) {
-            acc.set(mealId, { meal: entry.object.meal, elements: [] })
-          }
-          acc.get(mealId)!.elements.push({
-            obj: entry.object.entry,
-            amount: entry.object.amount
-          })
-          return acc
-        }, journalMealsMap)
-      }
-
-      const journalMeals = Array.from(journalMealsMap.values()).map(journalMeal => {
-        return {
-          ...journalMeal,
-          journalId: journalEntries.find(entry => entry.object.meal.id === journalMeal.meal.id)?.id
-        }
-      })
-      console.log(journalMeals)
-      setJournalMeals(journalMeals)
-      const nutrients: Nutrients = journalMeals.reduce(
-        (acc, curr) => {
-          const nutrients = NutrientsCounterMap(curr)
-          return {
-            proteins: acc.proteins + nutrients.proteins,
-            fats: acc.fats + nutrients.fats,
-            carbs: acc.carbs + nutrients.carbs
-          }
-        },
-        { proteins: 0, carbs: 0, fats: 0 }
-      )
-      updateNutrients(nutrients)
-    }
-  }, [journalEntries, meals])
-
-  const updateNutrients = useCallback((nutrients: Nutrients) => {
-    setProteins(Math.floor(nutrients.proteins))
-    setCarbs(Math.floor(nutrients.carbs))
-    setFats(Math.floor(nutrients.fats))
-  }, [])
 
   const handleOnNutrientsChange = useCallback((carbsDiff: number, proteinsDiff: number, fatsDiff: number) => {
     setProteins(prev => Math.floor(prev - proteinsDiff))
@@ -103,8 +46,25 @@ const Journal = ({ navigation, route }: JournalScreenProps) => {
     }
   }, [])
 
-  if (journalEntriesError) return <Text>Fetching Journal Entries Error</Text>
-  if (mealsError) return <Text>Fetching Meals Error</Text>
+  useEffect(() => {
+    const nutrients: Nutrients = journal?.reduce(
+      (acc, curr) => {
+        const nutrients = NutrientsCounterMap(curr)
+        return {
+          proteins: acc.proteins + nutrients.proteins,
+          fats: acc.fats + nutrients.fats,
+          carbs: acc.carbs + nutrients.carbs
+        }
+      },
+      { proteins: 0, carbs: 0, fats: 0 }
+    ) ?? { proteins: 0, carbs: 0, fats: 0 }
+
+    setProteins(Math.floor(nutrients.proteins))
+    setCarbs(Math.floor(nutrients.carbs))
+    setFats(Math.floor(nutrients.fats))
+  }, [journal])
+
+  if (isJournalError) return <Text>Fetching Journal Entries Error</Text>
 
   const dateStruct = getDate(date)
 
@@ -112,7 +72,7 @@ const Journal = ({ navigation, route }: JournalScreenProps) => {
     <ScreenWrapper>
       {/* // for theme tests only */}
       <Button onPress={() => dispatch(toggleTheme())} title="Toggle Theme" />
-      {journalEntriesLoading || journalEntriesFetching || mealsLoading || mealsFetching ? (
+      {isJournalLoading || isJournalFetching ? (
         <View style={{ width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator animating={true} color={colors.accent} size="large" />
         </View>
@@ -120,7 +80,7 @@ const Journal = ({ navigation, route }: JournalScreenProps) => {
         <ScrollView style={styles.wrapper} nestedScrollEnabled>
           <View style={styles.dateWrapper}>
             <Pressable onPress={() => setShowDatePicker(true)} style={styles.date}>
-              <Text style={{ color: colors.neutral.text, fontWeight: 500 }}>
+              <Text style={{ color: colors.neutral.text, fontWeight: '500' }}>
                 {dateStruct.day.toString().padStart(2, '0')}/{dateStruct.month.toString().padStart(2, '0')}/
                 {dateStruct.year}
               </Text>
@@ -131,14 +91,14 @@ const Journal = ({ navigation, route }: JournalScreenProps) => {
             isVisible={showDatePicker}
             mode="date"
             date={new Date(new Date().setHours(0, 0, 0, 0))}
-            onConfirm={data => onDateChange(data)}
+            onConfirm={onDateChange}
             onCancel={() => setShowDatePicker(false)}
           />
 
-          {journalMeals.map((journalMeal, index) => (
+          {journal?.map((journalEntry, index) => (
             <Meal
-              key={`${journalMeal.meal.id}-${index}`}
-              journalMeal={journalMeal}
+              key={`${journalEntry.meal.id}-${index}`}
+              journalEntry={journalEntry}
               onNutrientsChange={handleOnNutrientsChange}
               navigation={navigation}
             />

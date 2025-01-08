@@ -62,7 +62,6 @@ const AddProductToComponent = ({ navigation, route }: AddProductToComponentScree
               object: journalRecipe,
               object_amount: journalRecipe.servings,
               object_type: 'product',
-              date: new Date(),
               meal: navMeal
             })
           }
@@ -70,7 +69,6 @@ const AddProductToComponent = ({ navigation, route }: AddProductToComponentScree
             object: navProduct,
             object_amount: UnitProductConverter(amount, unit, navProduct),
             object_type: 'product',
-            date: new Date(),
             meal: navMeal
           })
           navigation.navigate('Journal')
@@ -117,13 +115,10 @@ const AddProductToComponent = ({ navigation, route }: AddProductToComponentScree
         object: recipe,
         object_amount: recipe.servings,
         object_type: 'recipe',
-        date: new Date(),
         meal: meal
       })
     }
-    console.log({ journalRecipe, navMeal })
     if (journalRecipe && navMeal) {
-      console.log('success')
       addRecipeToJournal(journalRecipe, navMeal)
       navigation.navigate('Journal')
     }

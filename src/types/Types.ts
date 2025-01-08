@@ -89,7 +89,7 @@ export interface Recipe extends _ID_URL_FIELD {
   protein: number
 }
 
-export interface Journal extends _ID_URL_FIELD {
+export interface JournalLegacy extends _ID_URL_FIELD {
   readonly date: Date
   object: {
     type: 'product' | 'recipe'
@@ -100,14 +100,23 @@ export interface Journal extends _ID_URL_FIELD {
   }
 }
 
-export interface JournalMeal {
-  journalId?: string
+export type Journal = JournalEntry[]
+
+export interface JournalEntry {
   meal: Meal
-  elements: {
-    obj: ProductDetails | Recipe
-    // obj: ProductDetails
-    amount: number
-  }[]
+  journal_entities: JournalEntity[]
+}
+
+export interface JournalEntity<T = ProductDetails | Recipe> extends _ID_URL_FIELD {
+  date: Date
+  object: JournalObject<T>
+}
+
+export interface JournalObject<T = ProductDetails | Recipe> {
+  type: 'product' | 'recipe'
+  meal: Meal
+  entry: T
+  amount: number
 }
 
 export type Nutrients = {

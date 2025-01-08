@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, memo, useRef } from 'react'
-import { View, Text, StyleSheet, TextInput, Pressable } from 'react-native'
-import { Recipe as IRecipe, ThemeColors, Nutrients, RootStackParamList } from '../../types/Types'
+import { View, Text, StyleSheet, TextInput, Pressable, ActivityIndicator } from 'react-native'
+import { Recipe as IRecipe, ThemeColors, Nutrients, RootStackParamList, JournalEntity } from '../../types/Types'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/Store'
 import Icon from 'react-native-vector-icons/Feather'
@@ -9,10 +9,12 @@ import EntypoIcon from 'react-native-vector-icons/Entypo'
 import { CountKcal } from '../../helpers/CountKcal'
 import { NavigationProp } from '@react-navigation/native'
 import Dialog, { DialogContent, DialogTrigger } from '../dialog/Dialog'
+import { useDeleteJournalMutation, usePatchJournalMutation } from '../../redux/api/slices/JournalApiSlice'
+import AntDesignIcon from 'react-native-vector-icons/AntDesign'
 
 type RecipeProps = {
   navigation: NavigationProp<RootStackParamList>
-  recipe: IRecipe
+  recipeEntity: JournalEntity<IRecipe>
   defaultServings: number
   onNutrientsChange: (
     carbsDiff: number,
@@ -21,18 +23,20 @@ type RecipeProps = {
     servings: number,
     object: IRecipe
   ) => void
-  onRecipeRemove: (recipe: IRecipe) => void
   destructor: (recipe: IRecipe, servings: number) => void
 }
 
-const Recipe = ({
-  navigation,
-  recipe,
-  defaultServings,
-  onNutrientsChange,
-  onRecipeRemove,
-  destructor
-}: RecipeProps) => {
+const Recipe = ({ navigation, recipeEntity, defaultServings, onNutrientsChange, destructor }: RecipeProps) => {
+  const [patchRecipeEntity] = usePatchJournalMutation()
+  const [
+    removeRecipeEntity,
+    {
+      isLoading: isRemoveRecipeEntityLoading,
+      isError: isRemoveRecipeEntityError,
+      isSuccess: isRemoveRecipeEntitySuccess
+    }
+  ] = useDeleteJournalMutation()
+
   const [servings, setServings] = useState<number>(defaultServings)
   const [shouldDecrease, setShouldDecrease] = useState(true)
   const [isRemoveProductDialogVisible, setIsRemoveProductDialogVisible] = useState(false)
@@ -57,7 +61,7 @@ const Recipe = ({
 
   useEffect(() => {
     return () => {
-      destructor(recipe, servingsRef.current)
+      destructor(recipeEntity.object.entry, servingsRef.current)
     }
   }, [])
 
@@ -66,8 +70,9 @@ const Recipe = ({
   }, [servings])
 
   useEffect(() => {
-    updateNutrients(getScaledNutrients(recipe, servings / recipe.servings))
-  }, [recipe])
+    setServings(defaultServings)
+    updateNutrients(getScaledNutrients(recipeEntity.object.entry, defaultServings / recipeEntity.object.entry.servings))
+  }, [defaultServings, recipeEntity.object.entry])
 
   const updateNutrients = useCallback((nutrients: Nutrients) => {
     setProteins(Math.floor(nutrients.proteins))
@@ -76,12 +81,12 @@ const Recipe = ({
   }, [])
 
   const handleOnProductInfoClick = useCallback(() => {
-    navigation.navigate('Recipe', { recipe: recipe })
-  }, [])
+    navigation.navigate('Recipe', { recipe: recipeEntity.object.entry })
+  }, [recipeEntity.object.entry])
 
-  const handleOnRecipeRemove = useCallback(async () => {
-    onRecipeRemove(recipe)
-  }, [onRecipeRemove])
+  const handleOnRecipeEntityRemove = useCallback(async () => {
+    removeRecipeEntity(recipeEntity.id)
+  }, [recipeEntity.id])
 
   const handleServingsChange = useCallback(
     (text: string) => {
@@ -89,7 +94,10 @@ const Recipe = ({
       setServings(prev => {
         if (isNaN(numericValue) || numericValue <= 0) {
           if (shouldDecrease) {
-            const nutrientsNew = getScaledNutrients(recipe, prev / recipe.servings)
+            const nutrientsNew = getScaledNutrients(
+              recipeEntity.object.entry,
+              prev / recipeEntity.object.entry.servings
+            )
             const nutrients_ = { proteins: 0, fats: 0, carbs: 0 }
             updateNutrients(nutrients_)
             onNutrientsChange(
@@ -97,25 +105,49 @@ const Recipe = ({
               Math.floor(nutrientsNew.proteins),
               Math.floor(nutrientsNew.fats),
               0,
-              recipe
+              recipeEntity.object.entry
             )
             setShouldDecrease(false)
           }
+          patchRecipeEntity({
+            journalId: recipeEntity.id,
+            body: {
+              object_type: 'recipe',
+              object: recipeEntity.object.entry,
+              object_amount: 0,
+              meal: recipeEntity.object.meal
+            }
+          })
           return 0
         }
         setShouldDecrease(true)
         const amount = numericValue
-        const nutrientsNew = getScaledNutrients(recipe, amount / recipe.servings)
+        const nutrientsNew = getScaledNutrients(recipeEntity.object.entry, amount / recipeEntity.object.entry.servings)
         const proteinsDiff = proteins - nutrientsNew.proteins
         const carbsDiff = carbs - nutrientsNew.carbs
         const fatsDiff = fats - nutrientsNew.fats
         updateNutrients(nutrientsNew)
-        onNutrientsChange(carbsDiff, proteinsDiff, fatsDiff, amount, recipe)
+        onNutrientsChange(carbsDiff, proteinsDiff, fatsDiff, amount, recipeEntity.object.entry)
+        patchRecipeEntity({
+          journalId: recipeEntity.id,
+          body: {
+            object_type: 'recipe',
+            object: recipeEntity.object.entry,
+            object_amount: amount,
+            meal: recipeEntity.object.meal
+          }
+        })
         return amount
       })
     },
-    [onNutrientsChange, proteins, carbs, fats, servings, recipe, shouldDecrease, updateNutrients]
+    [onNutrientsChange, proteins, carbs, fats, servings, recipeEntity.object.entry, shouldDecrease, updateNutrients]
   )
+
+  useEffect(() => {
+    if (isRemoveRecipeEntitySuccess) {
+      setIsRemoveProductDialogVisible(false)
+    }
+  }, [isRemoveRecipeEntitySuccess])
 
   return (
     <View style={styles.Product}>
@@ -141,14 +173,20 @@ const Recipe = ({
             <Text style={styles.DialogContentText}>Are you sure you want to remove this item from Journal?</Text>
             <View style={styles.DialogContentButtonsWrapper}>
               <Pressable
-                onPress={handleOnRecipeRemove}
+                onPress={handleOnRecipeEntityRemove}
+                disabled={isRemoveRecipeEntityLoading}
                 style={[
                   styles.DialogContentButton,
                   { backgroundColor: '#CD5C5C', flexDirection: 'row', justifyContent: 'center', gap: 5 }
                 ]}
               >
                 <Text style={{ color: colors.primary }}>Yes</Text>
-                <Icon name="trash-2" size={14} color={colors.primary} />
+                {!isRemoveRecipeEntityLoading && !isRemoveRecipeEntityError && !isRemoveRecipeEntitySuccess && (
+                  <Icon name="trash-2" size={14} color={colors.primary} />
+                )}
+                {isRemoveRecipeEntityLoading && <ActivityIndicator color={colors.primary} />}
+                {isRemoveRecipeEntityError && <AntDesignIcon name="close" size={24} color={colors.primary} />}
+                {isRemoveRecipeEntitySuccess && <AntDesignIcon name="check" size={24} color={colors.primary} />}
               </Pressable>
               <Pressable style={styles.DialogContentButton} onPress={() => setIsRemoveProductDialogVisible(false)}>
                 <Text>No</Text>
@@ -158,7 +196,7 @@ const Recipe = ({
         </Dialog>
       </View>
       <View style={styles.Row}>
-        <Text style={styles.ProductName}>{recipe.name}</Text>
+        <Text style={styles.ProductName}>{recipeEntity.object.entry.name}</Text>
         <TextInput
           style={styles.AmountInput}
           value={servings?.toString() ?? 0}

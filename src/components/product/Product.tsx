@@ -1,42 +1,53 @@
 import { useState, useEffect, useMemo, useCallback, memo, useRef } from 'react'
-import { View, Text, StyleSheet, TextInput, Pressable } from 'react-native'
-import { ProductDetails, Unit, ThemeColors, Nutrients, RootStackParamList } from '../../types/Types'
-import { UnitAmountConverter, UnitProductConverter } from '../../helpers/UnitAmountConverter'
+import { View, Text, StyleSheet, TextInput, Pressable, ActivityIndicator } from 'react-native'
+import {
+  ProductDetails as IProduct,
+  ThemeColors,
+  Nutrients,
+  RootStackParamList,
+  JournalEntity,
+  Unit
+} from '../../types/Types'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/Store'
 import Icon from 'react-native-vector-icons/Feather'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import EntypoIcon from 'react-native-vector-icons/Entypo'
-import { NutrientsCounter } from '../../helpers/NutrientsCounter'
 import { CountKcal } from '../../helpers/CountKcal'
 import { NavigationProp } from '@react-navigation/native'
-import UnitSelector from '../unitSelector/Unitselector'
 import Dialog, { DialogContent, DialogTrigger } from '../dialog/Dialog'
+import { useDeleteJournalMutation, usePatchJournalMutation } from '../../redux/api/slices/JournalApiSlice'
+import AntDesignIcon from 'react-native-vector-icons/AntDesign'
+import { NutrientsCounter } from '../../helpers/NutrientsCounter'
+import { UnitAmountConverter, UnitProductConverter } from '../../helpers/UnitAmountConverter'
+import UnitSelector from '../unitSelector/Unitselector'
 
 type ProductProps = {
   navigation: NavigationProp<RootStackParamList>
-  product: ProductDetails
+  productEntity: JournalEntity<IProduct>
   defaultAmount: number
   onNutrientsChange: (
     carbsDiff: number,
     proteinsDiff: number,
     fatsDiff: number,
     amount: number,
-    object: ProductDetails
+    object: IProduct
   ) => void
-  onProductRemove: (product: ProductDetails) => void
-  destructor: (product: ProductDetails, amount: number, unit: Unit) => void
+  destructor: (product: IProduct, amount: number, unit: Unit) => void
 }
 
-const Product = ({
-  navigation,
-  product,
-  defaultAmount,
-  onNutrientsChange,
-  onProductRemove,
-  destructor
-}: ProductProps) => {
-  const [unit, setUnit] = useState<Unit>(product.unit)
+const Product = ({ navigation, productEntity, defaultAmount, onNutrientsChange, destructor }: ProductProps) => {
+  const [patchProductEntity] = usePatchJournalMutation()
+  const [
+    removeProductEntity,
+    {
+      isLoading: isRemoveProductEntityLoading,
+      isError: isRemoveProductEntityError,
+      isSuccess: isRemoveProductEntitySuccess
+    }
+  ] = useDeleteJournalMutation()
+
+  const [unit, setUnit] = useState<Unit>(productEntity.object.entry.unit)
   const [amount, setAmount] = useState<number>(defaultAmount)
   const [shouldDecrease, setShouldDecrease] = useState(true)
   const [isRemoveProductDialogVisible, setIsRemoveProductDialogVisible] = useState(false)
@@ -50,15 +61,15 @@ const Product = ({
   const colors = useSelector((state: RootState) => state.theme.colors)
   const styles = useMemo(() => createStyles(colors), [colors])
   const avaibleUnits = useMemo((): Unit[] => {
-    if (product.unit === 'g' || product.unit === 'kg') {
+    if (productEntity.object.entry.unit === 'g' || productEntity.object.entry.unit === 'kg') {
       return ['g', 'kg']
     }
     return ['ml', 'l']
-  }, [product.unit])
+  }, [productEntity.object.entry.unit])
 
   useEffect(() => {
     return () => {
-      destructor(product, amountRef.current, unit)
+      destructor(productEntity.object.entry, amountRef.current, unit)
     }
   }, [])
 
@@ -67,13 +78,13 @@ const Product = ({
   }, [amount])
 
   useEffect(() => {
-    const convertedData = UnitAmountConverter(defaultAmount, product.unit)
+    const convertedData = UnitAmountConverter(defaultAmount, productEntity.object.entry.unit)
     setUnit(convertedData.unit)
     setAmount(convertedData.amount)
-    const nutrients = NutrientsCounter(convertedData.amount, convertedData.unit, product)
+    const nutrients = NutrientsCounter(convertedData.amount, convertedData.unit, productEntity.object.entry)
 
     updateNutrients(nutrients)
-  }, [defaultAmount, product])
+  }, [defaultAmount, productEntity.object.entry])
 
   const updateNutrients = useCallback((nutrients: Nutrients) => {
     setProteins(Math.floor(nutrients.proteins))
@@ -82,12 +93,12 @@ const Product = ({
   }, [])
 
   const handleOnProductInfoClick = useCallback(() => {
-    navigation.navigate('ProductInfo', { product: product })
+    navigation.navigate('ProductInfo', { product: productEntity.object.entry })
   }, [])
 
-  const handleOnProductRemove = useCallback(async () => {
-    onProductRemove(product)
-  }, [onProductRemove])
+  const handleOnProductEntityRemove = useCallback(async () => {
+    removeProductEntity(productEntity.id)
+  }, [productEntity.id])
 
   const handleAmountChange = useCallback(
     (text: string) => {
@@ -95,7 +106,7 @@ const Product = ({
       setAmount(prev => {
         if (isNaN(numericValue) || numericValue <= 0) {
           if (shouldDecrease) {
-            const nutrientsNew = NutrientsCounter(prev, unit, product)
+            const nutrientsNew = NutrientsCounter(prev, unit, productEntity.object.entry)
             const nutrients_ = { proteins: 0, fats: 0, carbs: 0 }
             updateNutrients(nutrients_)
             onNutrientsChange(
@@ -103,40 +114,95 @@ const Product = ({
               Math.floor(nutrientsNew.proteins),
               Math.floor(nutrientsNew.fats),
               0,
-              product
+              productEntity.object.entry
             )
             setShouldDecrease(false)
           }
+          patchProductEntity({
+            journalId: productEntity.id,
+            body: {
+              object_type: 'product',
+              object: productEntity.object.entry,
+              object_amount: 0,
+              meal: productEntity.object.meal
+            }
+          })
           return 0
         }
         setShouldDecrease(true)
         const amount = numericValue
-        const nutrientsNew = NutrientsCounter(amount, unit, product)
+        const nutrientsNew = NutrientsCounter(amount, unit, productEntity.object.entry)
         const proteinsDiff = proteins - nutrientsNew.proteins
         const carbsDiff = carbs - nutrientsNew.carbs
         const fatsDiff = fats - nutrientsNew.fats
         updateNutrients(nutrientsNew)
-        onNutrientsChange(carbsDiff, proteinsDiff, fatsDiff, UnitProductConverter(amount, unit, product), product)
+        onNutrientsChange(
+          carbsDiff,
+          proteinsDiff,
+          fatsDiff,
+          UnitProductConverter(amount, unit, productEntity.object.entry),
+          productEntity.object.entry
+        )
+        patchProductEntity({
+          journalId: productEntity.id,
+          body: {
+            object_type: 'product',
+            object: productEntity.object.entry,
+            object_amount: amount,
+            meal: productEntity.object.meal
+          }
+        })
         return amount
       })
     },
-    [onNutrientsChange, proteins, carbs, fats, unit, product, shouldDecrease, updateNutrients]
+    [
+      onNutrientsChange,
+      proteins,
+      carbs,
+      fats,
+      unit,
+      amount,
+      productEntity.object.entry,
+      shouldDecrease,
+      updateNutrients
+    ]
   )
 
   const handleUnitChange = useCallback(
     (newUnit: Unit) => {
       setUnit(newUnit)
 
-      const nutrientsNew = NutrientsCounter(amount, newUnit, product)
+      const nutrientsNew = NutrientsCounter(amount, newUnit, productEntity.object.entry)
       const proteinsDiff = proteins - nutrientsNew.proteins
       const carbsDiff = carbs - nutrientsNew.carbs
       const fatsDiff = fats - nutrientsNew.fats
 
       updateNutrients(nutrientsNew)
-      onNutrientsChange(carbsDiff, proteinsDiff, fatsDiff, UnitProductConverter(amount, newUnit, product), product)
+      onNutrientsChange(
+        carbsDiff,
+        proteinsDiff,
+        fatsDiff,
+        UnitProductConverter(amount, newUnit, productEntity.object.entry),
+        productEntity.object.entry
+      )
+      patchProductEntity({
+        journalId: productEntity.id,
+        body: {
+          object_type: 'product',
+          object: productEntity.object.entry,
+          object_amount: amount,
+          meal: productEntity.object.meal
+        }
+      })
     },
-    [amount, proteins, carbs, fats, product, onNutrientsChange, updateNutrients]
+    [amount, proteins, carbs, fats, productEntity.object.entry, onNutrientsChange, updateNutrients]
   )
+
+  useEffect(() => {
+    if (isRemoveProductEntitySuccess) {
+      setIsRemoveProductDialogVisible(false)
+    }
+  }, [isRemoveProductEntitySuccess])
 
   return (
     <View style={styles.Product}>
@@ -162,14 +228,20 @@ const Product = ({
             <Text style={styles.DialogContentText}>Are you sure you want to remove this item from Journal?</Text>
             <View style={styles.DialogContentButtonsWrapper}>
               <Pressable
-                onPress={handleOnProductRemove}
+                onPress={handleOnProductEntityRemove}
+                disabled={isRemoveProductEntityLoading}
                 style={[
                   styles.DialogContentButton,
                   { backgroundColor: '#CD5C5C', flexDirection: 'row', justifyContent: 'center', gap: 5 }
                 ]}
               >
                 <Text style={{ color: colors.primary }}>Yes</Text>
-                <Icon name="trash-2" size={14} color={colors.primary} />
+                {!isRemoveProductEntityLoading && !isRemoveProductEntityError && !isRemoveProductEntitySuccess && (
+                  <Icon name="trash-2" size={14} color={colors.primary} />
+                )}
+                {isRemoveProductEntityLoading && <ActivityIndicator color={colors.primary} />}
+                {isRemoveProductEntityError && <AntDesignIcon name="close" size={24} color={colors.primary} />}
+                {isRemoveProductEntitySuccess && <AntDesignIcon name="check" size={24} color={colors.primary} />}
               </Pressable>
               <Pressable style={styles.DialogContentButton} onPress={() => setIsRemoveProductDialogVisible(false)}>
                 <Text>No</Text>
@@ -179,7 +251,7 @@ const Product = ({
         </Dialog>
       </View>
       <View style={styles.Row}>
-        <Text style={styles.ProductName}>{product.name}</Text>
+        <Text style={styles.ProductName}>{productEntity.object.entry.name}</Text>
         <TextInput
           style={styles.AmountInput}
           value={amount?.toString() ?? 0}
