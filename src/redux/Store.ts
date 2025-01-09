@@ -3,6 +3,7 @@ import { setupListeners } from '@reduxjs/toolkit/query/react'
 import authReducer from './slices/AuthSlice'
 import themeReducer from './slices/ThemeSlice'
 import dataStoreReducer from './slices/dataStore'
+import journalRefetchReducer from './slices/JournalSlice'
 import { fridgeApiSlice } from './api/slices/FridgeApiSlice'
 import { journalApiSlice } from './api/slices/JournalApiSlice'
 import { userMealApiSlice } from './api/slices/UserMealSlice'
@@ -15,6 +16,7 @@ export const store = configureStore({
     auth: authReducer,
     theme: themeReducer,
     dataStore: dataStoreReducer,
+    journalRefetch: journalRefetchReducer,
     [userApiSlice.reducerPath]: userApiSlice.reducer,
     [fridgeApiSlice.reducerPath]: fridgeApiSlice.reducer,
     [journalApiSlice.reducerPath]: journalApiSlice.reducer,
