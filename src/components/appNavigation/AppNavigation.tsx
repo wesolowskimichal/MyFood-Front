@@ -21,6 +21,7 @@ import AddRecipe from '../../screens/addRecipe/AddRecipe'
 import Recipe from '../../screens/recipe/Recipe'
 import EditRecipe from '../../screens/editRecipe/EditRecipe'
 import RecipesList from '../../screens/recipesList/RecipesList'
+import MealsConfig from '../../screens/mealsConfig/MealsConfig'
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
 
@@ -143,6 +144,17 @@ const AppNavigation = () => {
                 presentation: 'modal',
                 animationTypeForReplace: 'push',
                 animation: 'slide_from_right'
+              }}
+            />
+            <Stack.Screen
+              name="MealsConfig"
+              component={MealsConfig}
+              options={{
+                headerShown: true,
+                presentation: 'modal',
+                animationTypeForReplace: 'push',
+                animation: 'slide_from_right',
+                title: 'Meals'
               }}
             />
           </>
