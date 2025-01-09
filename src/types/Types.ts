@@ -176,6 +176,7 @@ export type RootStackParamList = {
 export type LoginScreenProps = NativeStackScreenProps<RootStackParamList, 'Login'>
 export type RegisterScreenProps = NativeStackScreenProps<RootStackParamList, 'Register'>
 export type JournalScreenProps = NativeStackScreenProps<RootStackParamList, 'Journal'>
+export type SettingsScreenProps = NativeStackScreenProps<RootStackParamList, 'Settings'>
 export type AddProductScreenProps = NativeStackScreenProps<RootStackParamList, 'AddProduct'>
 export type ProductNotFoundScreenProps = NativeStackScreenProps<RootStackParamList, 'ProductNotFound'>
 export type AddProductToComponentScreenProps = NativeStackScreenProps<RootStackParamList, 'AddProductToComponent'>

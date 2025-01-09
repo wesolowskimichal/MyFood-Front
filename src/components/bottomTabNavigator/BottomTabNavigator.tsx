@@ -10,6 +10,7 @@ import Recipes from '../../screens/recipes/Recipes'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/Store'
 import Animated, { useSharedValue, withSpring, useAnimatedStyle } from 'react-native-reanimated'
+import Settings from '../../screens/settings/Settings'
 
 const Tab = createBottomTabNavigator<RootStackParamList>()
 
@@ -48,6 +49,12 @@ const BottomTabNavigator = () => {
             return (
               <Animated.View style={animatedStyle}>
                 <MaterialIcon name="chef-hat" size={size} color={color} />
+              </Animated.View>
+            )
+          } else if (route.name === 'Settings') {
+            return (
+              <Animated.View style={animatedStyle}>
+                <MaterialIcon name="cog" size={size} color={color} />
               </Animated.View>
             )
           } else {
@@ -98,6 +105,14 @@ const BottomTabNavigator = () => {
         options={{
           headerShown: false,
           tabBarLabel: 'Recipes'
+        }}
+      />
+      <Tab.Screen
+        name="Settings"
+        component={Settings}
+        options={{
+          headerShown: false,
+          tabBarLabel: 'Settings'
         }}
       />
     </Tab.Navigator>

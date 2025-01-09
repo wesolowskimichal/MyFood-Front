@@ -8,15 +8,16 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-na
 type EmbeddedSwitchProps = {
   leftOption: ReactNode
   rightOption: ReactNode
+  checked?: boolean
   onSwitchToggle?: () => void
 }
 
-const EmbeddedSwitch = ({ leftOption, rightOption, onSwitchToggle }: EmbeddedSwitchProps) => {
+const EmbeddedSwitch = ({ leftOption, rightOption, onSwitchToggle, checked = false }: EmbeddedSwitchProps) => {
   const colors = useSelector((state: RootState) => state.theme.colors)
   const styles = useMemo(() => createStyles(colors), [colors])
 
-  const [_checked, setChecked] = useState(false)
-  const switchPosition = useSharedValue(0)
+  const [_checked, setChecked] = useState(checked)
+  const switchPosition = useSharedValue(checked ? 24 : 0)
 
   const switchStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: switchPosition.value }]

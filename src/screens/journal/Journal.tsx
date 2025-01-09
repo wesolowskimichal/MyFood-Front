@@ -1,4 +1,4 @@
-import { ActivityIndicator, Button, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useGetJournalsByDateQuery } from '../../redux/api/slices/JournalApiSlice'
 import { JournalScreenProps, Nutrients, ThemeColors } from '../../types/Types'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -10,7 +10,6 @@ import NutrientsBar from '../../components/nutrientsBar/NutrientsBar'
 import { getDate } from '../../helpers/GetDate'
 import DateTimePicker from 'react-native-modal-datetime-picker'
 import FeatherIcon from 'react-native-vector-icons/Feather'
-import { toggleTheme } from '../../redux/slices/ThemeSlice'
 import { NutrientsCounterMap } from '../../helpers/NutrientsCounter'
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons'
 import { setJournalRefetch } from '../../redux/slices/JournalSlice'
@@ -87,9 +86,6 @@ const Journal = ({ navigation }: JournalScreenProps) => {
 
   return (
     <ScreenWrapper>
-      {/* // for theme tests only */}
-      <Button onPress={() => dispatch(toggleTheme())} title="Toggle Theme" />
-      <Button onPress={handleOnAddMealClick} title="Add Meal" />
       {isJournalLoading || isJournalFetching ? (
         <View style={{ width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator animating={true} color={colors.accent} size="large" />
